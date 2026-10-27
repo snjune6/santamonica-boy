@@ -17,11 +17,38 @@ body {
   flex-direction: column;
 }
 
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+  height: auto;
+}
+
 .top {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  height: 72px;
-  padding: 0 32px;
+  justify-content: space-between;
+  gap: 12px 28px;
+  min-height: 72px;
+  padding: 16px 32px;
+}
+
+.menu {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 22px;
+  max-width: 100%;
+}
+
+.menu a {
+  color: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  text-decoration: none;
 }
 
 .brand {
@@ -85,6 +112,15 @@ p {
   main {
     padding-left: 20px;
     padding-right: 20px;
+  }
+
+  .top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .menu {
+    width: 100%;
   }
 
   main {
