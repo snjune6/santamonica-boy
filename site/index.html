@@ -19,14 +19,120 @@
   <body>
     <header class="top">
       <a class="brand" href="/">Santamonica Boy</a>
+      <div class="account">
+        <span class="account-email" data-auth-status hidden></span>
+        <button class="account-action" type="button" data-auth data-mode="in">Sign in</button>
+      </div>
     </header>
-    <main>
+
+    <main class="hero" id="top" data-section>
       <h1>We build websites and design.</h1>
       <p>
         We design and build websites and product screens. We add the features a service
-        needs and shape them so people can understand them.
+        needs and shape them so people can understand them. We also build helpful programs.
       </p>
-      <button class="action" type="button" disabled>AutoCation</button>
+      <button class="action" type="button" data-download disabled>AutoCation</button>
     </main>
+
+    <section class="work" id="work" data-section aria-labelledby="work-title">
+      <div class="work-panel" data-reveal>
+        <h2 id="work-title">Work</h2>
+        <p class="work-lead">A few selected projects across websites, products, and tools.</p>
+
+        <div class="work-list">
+          <article class="work-item">
+            <img
+              src="https://picsum.photos/seed/santamonica-1/1200/800"
+              alt="Placeholder image for coastal brand website"
+              width="1200"
+              height="800"
+              loading="lazy"
+            />
+            <h3>Coastal brand site</h3>
+            <p>Website and product screens for a service launch.</p>
+          </article>
+
+          <article class="work-item">
+            <img
+              src="https://picsum.photos/seed/santamonica-2/1200/800"
+              alt="Placeholder image for operations dashboard"
+              width="1200"
+              height="800"
+              loading="lazy"
+            />
+            <h3>Operations dashboard</h3>
+            <p>Interface work that keeps complex features easy to read.</p>
+          </article>
+
+          <article class="work-item">
+            <img
+              src="https://picsum.photos/seed/santamonica-3/1200/800"
+              alt="Placeholder image for AutoCation desktop tool"
+              width="1200"
+              height="800"
+              loading="lazy"
+            />
+            <h3>AutoCation</h3>
+            <p>A helpful desktop program built for everyday workflows.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="contact" id="contact" data-section aria-labelledby="contact-title">
+      <div class="contact-panel" data-reveal>
+        <h2 id="contact-title">Contact</h2>
+        <p class="contact-lead">
+          Send an inquiry about a new project, maintenance, or defect repair.
+        </p>
+
+        <form class="contact-form" data-contact-form>
+          <fieldset class="contact-types">
+            <legend class="sr-only">Inquiry type</legend>
+            <label class="contact-type">
+              <input type="radio" name="type" value="New project" checked />
+              <span>New project</span>
+            </label>
+            <label class="contact-type">
+              <input type="radio" name="type" value="Maintenance" />
+              <span>Maintenance</span>
+            </label>
+            <label class="contact-type">
+              <input type="radio" name="type" value="Defect repair" />
+              <span>Defect repair</span>
+            </label>
+          </fieldset>
+
+          <label class="field">
+            <span>Name</span>
+            <input name="name" type="text" maxlength="80" required autocomplete="name" />
+          </label>
+
+          <label class="field">
+            <span>Email</span>
+            <input name="email" type="email" maxlength="120" required autocomplete="email" />
+          </label>
+
+          <label class="field">
+            <span>Message</span>
+            <textarea name="message" rows="5" maxlength="2000" required></textarea>
+          </label>
+
+          <button class="contact-submit" type="submit">Send</button>
+          <p class="contact-status" data-contact-status role="status" aria-live="polite"></p>
+        </form>
+      </div>
+    </section>
+
+    <footer class="site-footer">
+      <p class="site-footer-copy">© 2026 Santamonica Boy</p>
+      <ul class="site-footer-links">
+        <li><a href="#work">Work</a></li>
+        <li><a href="#contact">Contact</a></li>
+        <li><a href="#top">Home</a></li>
+      </ul>
+    </footer>
+
+    <script type="module" src="app.js"></script>
   </body>
 </html>
