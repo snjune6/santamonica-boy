@@ -49,11 +49,9 @@ const authStatus = document.querySelector("[data-auth-status]");
 const contactForm = document.querySelector("[data-contact-form]");
 const contactStatus = document.querySelector("[data-contact-status]");
 const revealPanels = document.querySelectorAll("[data-reveal]");
-const sections = Array.from(document.querySelectorAll("[data-section]"));
 
 let downloadUrl = null;
 let clickBound = false;
-let isSnapping = false;
 
 function setDownloadDisabled(message) {
   if (!downloadButton) return;
@@ -260,87 +258,29 @@ function setupReveal() {
   revealPanels.forEach((panel) => observer.observe(panel));
 }
 
-function snapTo(section) {
-  if (!section || isSnapping) return;
-  isSnapping = true;
-  section.scrollIntoView({ behavior: "smooth", block: "start" });
-  window.setTimeout(() => {
-    isSnapping = false;
-  }, 900);
-}
+function setupToTop() {
+  const button = document.querySelector("[data-to-top]");
+  if (!button) return;
 
-function getNearestSectionIndex() {
-  const mid = window.scrollY + window.innerHeight * 0.35;
-  let nearestIndex = 0;
-  let nearestDistance = Number.POSITIVE_INFINITY;
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+  const showAfter = () => Math.max(240, Math.round(window.innerHeight * 0.45));
 
-  sections.forEach((section, index) => {
-    const center = section.offsetTop + section.offsetHeight * 0.35;
-    const distance = Math.abs(center - mid);
-    if (distance < nearestDistance) {
-      nearestDistance = distance;
-      nearestIndex = index;
-    }
+  const syncVisibility = () => {
+    const visible = window.scrollY > showAfter();
+    button.classList.toggle("is-visible", visible);
+    button.hidden = !visible;
+  };
+
+  button.addEventListener("click", () => {
+    window.scrollTo({
+      top: 0,
+      behavior: reduceMotion.matches ? "auto" : "smooth",
+    });
   });
 
-  return nearestIndex;
-}
-
-function setupSectionSnap() {
-  if (sections.length < 2) return;
-  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-
-  window.addEventListener(
-    "wheel",
-    (event) => {
-      if (isSnapping) {
-        event.preventDefault();
-        return;
-      }
-
-      if (Math.abs(event.deltaY) < 12) return;
-
-      const currentIndex = getNearestSectionIndex();
-      const nextIndex =
-        event.deltaY > 0
-          ? Math.min(currentIndex + 1, sections.length - 1)
-          : Math.max(currentIndex - 1, 0);
-
-      if (nextIndex === currentIndex) return;
-
-      event.preventDefault();
-      snapTo(sections[nextIndex]);
-    },
-    { passive: false }
-  );
-
-  let touchStartY = 0;
-  window.addEventListener(
-    "touchstart",
-    (event) => {
-      touchStartY = event.touches[0]?.clientY ?? 0;
-    },
-    { passive: true }
-  );
-
-  window.addEventListener(
-    "touchend",
-    (event) => {
-      const endY = event.changedTouches[0]?.clientY ?? touchStartY;
-      const delta = touchStartY - endY;
-      if (Math.abs(delta) < 40) return;
-
-      const currentIndex = getNearestSectionIndex();
-      const nextIndex =
-        delta > 0
-          ? Math.min(currentIndex + 1, sections.length - 1)
-          : Math.max(currentIndex - 1, 0);
-
-      if (nextIndex === currentIndex) return;
-      snapTo(sections[nextIndex]);
-    },
-    { passive: true }
-  );
+  window.addEventListener("scroll", syncVisibility, { passive: true });
+  window.addEventListener("resize", syncVisibility, { passive: true });
+  syncVisibility();
 }
 
 if (authButton) {
@@ -375,4 +315,4 @@ onAuthStateChanged(auth, (user) => {
 
 setupContactForm();
 setupReveal();
-setupSectionSnap();
+setupToTop();
