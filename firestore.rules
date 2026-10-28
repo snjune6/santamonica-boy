@@ -11,11 +11,13 @@ service cloud.firestore {
       allow create: if request.auth != null
         && request.auth.uid == userId
         && request.resource.data.autoCaption is int
-        && request.resource.data.autoCaption == 0;
+        && request.resource.data.autoCaption == 0
+        && request.resource.data.role == 1;
       allow update: if request.auth != null
         && request.auth.uid == userId
         && request.resource.data.autoCaption is int
-        && request.resource.data.autoCaption == resource.data.get('autoCaption', 0);
+        && request.resource.data.autoCaption == resource.data.get('autoCaption', 0)
+        && request.resource.data.get('role', 1) == resource.data.get('role', 1);
       allow delete: if false;
     }
 

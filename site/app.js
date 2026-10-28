@@ -97,6 +97,7 @@ async function rememberFirstLogin(user) {
     email: user.email || "",
     displayName: user.displayName || "",
     autoCaption: 0,
+    role: 1,
     createdAt: serverTimestamp(),
     lastLoginAt: serverTimestamp(),
   });
