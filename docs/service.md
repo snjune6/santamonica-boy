@@ -5,7 +5,7 @@
 | 구분 | 저장소 | 주소 | 하는 일 |
 | --- | --- | --- | --- |
 | 대표 홈페이지 | `snjune6/santamonica-boy` | https://santamonica-boy.web.app | 소개, Google 로그인, 설치 파일 받기, 문의 보내기 |
-| 관리자 | `snjune6/santamonica-admin` | https://santamonica-admin--santamonica-boy.asia-east1.hosted.app | 허용된 Google 계정만 들어와서 문의 목록 보기 |
+| 관리자 | `snjune6/santamonica-admin` | https://santamonica-admin--santamonica-boy.asia-east1.hosted.app | role이 관리자인 Google 계정만 들어와서 문의 목록 보기 |
 | 프로그램 | `snjune6/AutoCation` | 설치 파일 `AutoCation-Setup-0.4.4.exe` | 로그인 후 화면을 캡처해 Gemini, Claude, ChatGPT로 보냄 |
 
 ## 공통 데이터
@@ -13,8 +13,9 @@
 같은 Google 계정이면 홈페이지와 프로그램이 Firestore `users/{같은 아이디}` 문서 하나를 씁니다.
 
 - 홈페이지는 처음 로그인할 때 이메일, 이름, 로그인 시각, `autoCaption: 0`, `role: 1`을 만듭니다. 문서가 이미 있고 `role`만 없으면 `1`을 채웁니다. 있는 `role`은 바꾸지 않습니다.
-- `role`이 `10`이면 관리자입니다. `1`부터 `9`까지는 일반 사용자입니다. 새 계정은 `1`로 기록됩니다.
-- 관리자 화면은 `users` 문서의 `role`이 `10`인 계정만 들어갑니다. 이메일 목록으로 관리자를 정하지 않습니다.
+- 역할 공통코드는 Firestore `commonCodes`에 있습니다. `role-10`은 관리자이고, `role-9`부터 `role-1`까지는 일반 사용자입니다.
+- `users.role`이 `commonCodes/role-10`의 값과 같으면 관리자입니다. 새 계정은 `1`로 기록됩니다.
+- 관리자 화면은 그 공통코드와 같은 `role`인 계정만 들어갑니다. 이메일 목록으로 관리자를 정하지 않습니다.
 - 프로그램은 설정과 `autoCaption`을 읽고, 값이 `1`일 때만 본 화면으로 들어갑니다. 값이 `0`이거나 없으면 사용할 수 없습니다.
 - 로그인 화면에서는 `autoCaption`과 `role`을 관리자 값으로 바꿀 수 없습니다. 바꿀 값은 Firebase 콘솔의 `users` 문서에서 직접 수정합니다.
 
@@ -26,4 +27,4 @@
 
 - `autoCaption`과 `role`은 Firebase 콘솔의 `users` 문서에서 바꿉니다.
 - 홈페이지 다운로드는 Storage의 `downloads/AutoCation-Setup.exe`를 최신 설치 파일로 덮어씁니다.
-- 관리자는 문의 목록을 봅니다. `role`이 `10`이 아닌 계정은 들어가지 못합니다.
+- 관리자는 문의 목록을 봅니다. `commonCodes/role-10`과 `role`이 다른 계정은 들어가지 못합니다.
