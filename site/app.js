@@ -14,6 +14,9 @@ import {
 import {
   getFirestore,
   collection,
+  doc,
+  getDoc,
+  setDoc,
   addDoc,
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
@@ -84,6 +87,19 @@ async function resolveInstallerUrl() {
 
 async function signIn() {
   await signInWithPopup(auth, googleProvider);
+}
+
+async function rememberFirstLogin(user) {
+  const userRef = doc(db, "users", user.uid);
+  const existing = await getDoc(userRef);
+  if (existing.exists()) return;
+  await setDoc(userRef, {
+    email: user.email || "",
+    displayName: user.displayName || "",
+    autoCaption: 0,
+    createdAt: serverTimestamp(),
+    lastLoginAt: serverTimestamp(),
+  });
 }
 
 async function handleDownloadClick() {
@@ -346,6 +362,10 @@ if (downloadButton && !clickBound) {
 onAuthStateChanged(auth, (user) => {
   updateAuthUi(user);
   refreshDownloadState(user);
+  if (!user) return;
+  rememberFirstLogin(user).catch((error) => {
+    console.warn("Could not save the first login:", error);
+  });
 });
 
 setupContactForm();
