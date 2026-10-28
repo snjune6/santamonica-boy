@@ -17,6 +17,7 @@ import {
   doc,
   getDoc,
   setDoc,
+  updateDoc,
   addDoc,
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
@@ -92,7 +93,10 @@ async function signIn() {
 async function rememberFirstLogin(user) {
   const userRef = doc(db, "users", user.uid);
   const existing = await getDoc(userRef);
-  if (existing.exists()) return;
+  if (existing.exists()) {
+    if (existing.get("role") == null) await updateDoc(userRef, { role: 1 });
+    return;
+  }
   await setDoc(userRef, {
     email: user.email || "",
     displayName: user.displayName || "",
