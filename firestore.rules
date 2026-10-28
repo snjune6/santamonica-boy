@@ -6,6 +6,11 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    match /commonCodes/{codeId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
     match /users/{userId} {
       allow read: if request.auth != null && request.auth.uid == userId;
       allow create: if request.auth != null
