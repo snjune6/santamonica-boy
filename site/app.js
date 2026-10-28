@@ -100,8 +100,8 @@ async function rememberFirstLogin(user) {
   await setDoc(userRef, {
     email: user.email || "",
     displayName: user.displayName || "",
-    autoCaption: 0,
     role: 1,
+    AutoCaption: { autoCaption: 0 },
     createdAt: serverTimestamp(),
     lastLoginAt: serverTimestamp(),
   });
