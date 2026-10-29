@@ -35,7 +35,12 @@ const firebaseConfig = {
 const INSTALLER_PATH = "downloads/AutoCation-Setup.exe";
 // FormSubmit form id (hides the inbox address in client code)
 const CONTACT_FORM_ID = "a26d0d3ae0d2ffd5377fe997d3e82282";
-const INQUIRY_TYPES = new Set(["New project", "Maintenance", "Defect repair"]);
+const INQUIRY_TYPES = new Set([
+  "New project",
+  "Maintenance",
+  "Defect repair",
+  "Other design",
+]);
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -292,6 +297,17 @@ function setupReveal() {
   revealPanels.forEach((panel) => observer.observe(panel));
 }
 
+function setupInquiryTypeLinks() {
+  document.querySelectorAll("[data-inquiry-type]").forEach((link) => {
+    link.addEventListener("click", () => {
+      const type = link.getAttribute("data-inquiry-type");
+      if (!type || !contactForm) return;
+      const input = contactForm.querySelector(`input[name="type"][value="${CSS.escape(type)}"]`);
+      if (input) input.checked = true;
+    });
+  });
+}
+
 function setupToTop() {
   const button = document.querySelector("[data-to-top]");
   if (!button) return;
@@ -315,6 +331,39 @@ function setupToTop() {
   window.addEventListener("scroll", syncVisibility, { passive: true });
   window.addEventListener("resize", syncVisibility, { passive: true });
   syncVisibility();
+}
+
+function setupShowcaseDialog() {
+  const section = document.querySelector("#showcase");
+  const dialog = document.querySelector("[data-showcase-dialog]");
+  const openButton = document.querySelector("[data-showcase-open]");
+  if (!section || !dialog || !openButton || typeof dialog.showModal !== "function") return;
+
+  const closeButtons = dialog.querySelectorAll("[data-showcase-close]");
+
+  const setOpenState = (open) => {
+    section.classList.toggle("is-dialog-open", open);
+  };
+
+  openButton.addEventListener("click", () => {
+    dialog.showModal();
+    setOpenState(true);
+  });
+
+  closeButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      dialog.close();
+    });
+  });
+
+  dialog.addEventListener("click", (event) => {
+    if (event.target === dialog) dialog.close();
+  });
+
+  dialog.addEventListener("close", () => {
+    setOpenState(false);
+    openButton.focus();
+  });
 }
 
 if (authButton) {
@@ -358,4 +407,6 @@ onAuthStateChanged(auth, (user) => {
 
 setupContactForm();
 setupReveal();
+setupInquiryTypeLinks();
 setupToTop();
+setupShowcaseDialog();
