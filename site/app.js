@@ -43,9 +43,11 @@ const storage = getStorage(app);
 const db = getFirestore(app);
 const googleProvider = new GoogleAuthProvider();
 
+const ADMIN_PAGE_ROLE = "관리자";
 const downloadButton = document.querySelector("[data-download]");
 const authButton = document.querySelector("[data-auth]");
 const authStatus = document.querySelector("[data-auth-status]");
+const adminLink = document.querySelector("[data-admin]");
 const contactForm = document.querySelector("[data-contact-form]");
 const contactStatus = document.querySelector("[data-contact-status]");
 const revealPanels = document.querySelectorAll("[data-reveal]");
@@ -140,6 +142,37 @@ async function refreshDownloadState(user) {
   }
 }
 
+function roleNumber(value) {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string" && value.trim() !== "") {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return null;
+}
+
+async function adminRoleCode() {
+  const snapshot = await getDoc(doc(db, "commonCodes", "role"));
+  const codes = snapshot.data() || {};
+  for (const [key, name] of Object.entries(codes)) {
+    if (name === ADMIN_PAGE_ROLE) return roleNumber(key) ?? 10;
+  }
+  return 10;
+}
+
+async function signedInUserIsAdmin(user) {
+  const [adminCode, userDoc] = await Promise.all([
+    adminRoleCode(),
+    getDoc(doc(db, "users", user.uid)),
+  ]);
+  return roleNumber(userDoc.get("role")) === adminCode;
+}
+
+function setAdminLink(visible) {
+  if (!adminLink) return;
+  adminLink.hidden = !visible;
+}
+
 function updateAuthUi(user) {
   if (!authButton || !authStatus) return;
 
@@ -153,6 +186,7 @@ function updateAuthUi(user) {
     authStatus.hidden = true;
     authButton.textContent = "Sign in";
     authButton.dataset.mode = "in";
+    setAdminLink(false);
   }
 }
 
@@ -307,10 +341,19 @@ if (downloadButton && !clickBound) {
 onAuthStateChanged(auth, (user) => {
   updateAuthUi(user);
   refreshDownloadState(user);
+  setAdminLink(false);
   if (!user) return;
-  rememberFirstLogin(user).catch((error) => {
-    console.warn("Could not save the first login:", error);
-  });
+  rememberFirstLogin(user)
+    .catch((error) => {
+      console.warn("Could not save the first login:", error);
+    })
+    .then(() => signedInUserIsAdmin(user))
+    .then((isAdmin) => {
+      if (auth.currentUser?.uid === user.uid) setAdminLink(isAdmin);
+    })
+    .catch((error) => {
+      console.warn("Could not check the admin role:", error);
+    });
 });
 
 setupContactForm();
