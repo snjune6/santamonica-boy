@@ -343,6 +343,7 @@ function setupShowcaseDialog() {
 
   const setOpenState = (open) => {
     section.classList.toggle("is-dialog-open", open);
+    document.documentElement.classList.toggle("is-scroll-locked", open);
   };
 
   openButton.addEventListener("click", () => {
