@@ -1,6 +1,9 @@
 (function setupSampleNav() {
   if (document.querySelector("[data-sample-nav]")) return;
 
+  // /sample Design 메뉴 임시 숨김 (다시 켤 때 true)
+  const SHOW_DESIGN_MENU = false;
+
   const path = window.location.pathname.replace(/\/$/, "") || "/";
   const designChildren = [
     { href: "/sample/main", label: "메인" },
@@ -26,53 +29,58 @@
   const homeItem = document.createElement("li");
   const homeLink = document.createElement("a");
   homeLink.href = "/";
-  homeLink.textContent = "Home";
+  homeLink.textContent = "홈";
   if (path === "/") homeLink.setAttribute("aria-current", "page");
   homeItem.appendChild(homeLink);
   list.appendChild(homeItem);
 
-  const designItem = document.createElement("li");
-  designItem.className = "sample-float-group";
+  let setDesignOpen = () => {};
 
-  const designToggle = document.createElement("button");
-  designToggle.className = "sample-float-parent";
-  designToggle.type = "button";
-  designToggle.textContent = "Design";
-  designToggle.setAttribute("aria-expanded", "false");
-  designToggle.setAttribute("aria-controls", "sample-float-design-sub");
-  if (isDesignPath) designToggle.classList.add("is-parent-active");
+  if (SHOW_DESIGN_MENU) {
+    const designItem = document.createElement("li");
+    designItem.className = "sample-float-group";
 
-  const childWrap = document.createElement("div");
-  childWrap.className = "sample-float-subwrap";
+    const designToggle = document.createElement("button");
+    designToggle.className = "sample-float-parent";
+    designToggle.type = "button";
+    designToggle.textContent = "Design";
+    designToggle.setAttribute("aria-expanded", "false");
+    designToggle.setAttribute("aria-controls", "sample-float-design-sub");
+    if (isDesignPath) designToggle.classList.add("is-parent-active");
 
-  const childList = document.createElement("ul");
-  childList.className = "sample-float-sublist";
-  childList.id = "sample-float-design-sub";
+    const childWrap = document.createElement("div");
+    childWrap.className = "sample-float-subwrap";
 
-  designChildren.forEach((item) => {
-    const li = document.createElement("li");
-    const a = document.createElement("a");
-    a.href = item.href;
-    a.textContent = item.label;
-    const itemPath = item.href.replace(/\/$/, "") || "/";
-    if (itemPath === path) a.setAttribute("aria-current", "page");
-    li.appendChild(a);
-    childList.appendChild(li);
-  });
-  childWrap.appendChild(childList);
+    const childList = document.createElement("ul");
+    childList.className = "sample-float-sublist";
+    childList.id = "sample-float-design-sub";
 
-  const setDesignOpen = (open) => {
-    designItem.classList.toggle("is-expanded", open);
-    designToggle.setAttribute("aria-expanded", open ? "true" : "false");
-  };
+    designChildren.forEach((item) => {
+      const li = document.createElement("li");
+      const a = document.createElement("a");
+      a.href = item.href;
+      a.textContent = item.label;
+      const itemPath = item.href.replace(/\/$/, "") || "/";
+      if (itemPath === path) a.setAttribute("aria-current", "page");
+      li.appendChild(a);
+      childList.appendChild(li);
+    });
+    childWrap.appendChild(childList);
 
-  designToggle.addEventListener("click", () => {
-    setDesignOpen(!designItem.classList.contains("is-expanded"));
-  });
+    setDesignOpen = (open) => {
+      designItem.classList.toggle("is-expanded", open);
+      designToggle.setAttribute("aria-expanded", open ? "true" : "false");
+    };
 
-  designItem.appendChild(designToggle);
-  designItem.appendChild(childWrap);
-  list.appendChild(designItem);
+    designToggle.addEventListener("click", () => {
+      setDesignOpen(!designItem.classList.contains("is-expanded"));
+    });
+
+    designItem.appendChild(designToggle);
+    designItem.appendChild(childWrap);
+    list.appendChild(designItem);
+  }
+
   panel.appendChild(list);
 
   const button = document.createElement("button");
@@ -91,8 +99,10 @@
     panel.hidden = !open;
     button.setAttribute("aria-expanded", open ? "true" : "false");
     button.setAttribute("aria-label", open ? "공통 메뉴 닫기" : "공통 메뉴 열기");
-    if (open && isDesignPath) setDesignOpen(true);
-    if (!open) setDesignOpen(false);
+    if (SHOW_DESIGN_MENU) {
+      if (open && isDesignPath) setDesignOpen(true);
+      if (!open) setDesignOpen(false);
+    }
   };
 
   button.addEventListener("click", () => {

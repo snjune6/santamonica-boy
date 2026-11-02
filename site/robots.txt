@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://santamonica-boy.web.app/sitemap.xml

@@ -1,13 +1,40 @@
 <!doctype html>
-<html lang="en">
+<html lang="ko">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Santamonica Boy</title>
+    <title>산타모니카보이 | 웹사이트·디자인·PPT 제작</title>
     <meta
       name="description"
-      content="Santamonica Boy designs and builds websites and product interfaces."
+      content="산타모니카보이(Santamonica Boy)는 웹사이트 제작, 디자인 개편, 리플렛·브로슈어, PPT 제작을 제공합니다. 프로젝트·유지보수·기타 디자인 문의를 남겨 주세요."
     />
+    <meta name="robots" content="index,follow" />
+    <meta name="keywords" content="산타모니카보이, Santamonica Boy, 웹사이트 제작, 웹디자인, PPT 제작, 브로슈어, 리플렛, 디자인 개편" />
+    <link rel="canonical" href="https://santamonica-boy.web.app/" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/assets/og-default.png" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="ko_KR" />
+    <meta property="og:site_name" content="Santamonica Boy" />
+    <meta property="og:title" content="산타모니카보이 | 웹사이트·디자인·PPT 제작" />
+    <meta
+      property="og:description"
+      content="웹사이트 제작, 디자인 개편, 리플렛·브로슈어, PPT까지. 산타모니카보이와 프로젝트를 시작해 보세요."
+    />
+    <meta property="og:url" content="https://santamonica-boy.web.app/" />
+    <meta property="og:image" content="https://santamonica-boy.web.app/assets/og-default.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="산타모니카보이 | 웹사이트·디자인·PPT 제작" />
+    <meta
+      name="twitter:description"
+      content="웹사이트 제작, 디자인 개편, 리플렛·브로슈어, PPT까지. 산타모니카보이와 프로젝트를 시작해 보세요."
+    />
+    <meta name="twitter:image" content="https://santamonica-boy.web.app/assets/og-default.png" />
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -15,6 +42,47 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="styles.css" />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://santamonica-boy.web.app/#organization",
+            "name": "Santamonica Boy",
+            "alternateName": "산타모니카보이",
+            "url": "https://santamonica-boy.web.app/",
+            "logo": "https://santamonica-boy.web.app/favicon.svg",
+            "description": "웹사이트 제작, 디자인 개편, 리플렛·브로슈어, PPT 제작을 제공하는 디자인·개발 스튜디오입니다."
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://santamonica-boy.web.app/#website",
+            "url": "https://santamonica-boy.web.app/",
+            "name": "Santamonica Boy",
+            "alternateName": "산타모니카보이",
+            "inLanguage": "ko-KR",
+            "publisher": { "@id": "https://santamonica-boy.web.app/#organization" }
+          },
+          {
+            "@type": "ProfessionalService",
+            "@id": "https://santamonica-boy.web.app/#service",
+            "name": "산타모니카보이",
+            "url": "https://santamonica-boy.web.app/",
+            "image": "https://santamonica-boy.web.app/assets/og-default.png",
+            "areaServed": "KR",
+            "serviceType": [
+              "웹사이트 제작",
+              "디자인 개편",
+              "리플렛·브로슈어 디자인",
+              "PPT 제작"
+            ],
+            "provider": { "@id": "https://santamonica-boy.web.app/#organization" }
+          }
+        ]
+      }
+    </script>
   </head>
   <body>
     <header class="top">
@@ -26,34 +94,34 @@
           href="https://santamonica-admin--santamonica-boy.asia-east1.hosted.app"
           data-admin
           hidden
-          >Admin</a
+          >관리자</a
         >
-        <button class="account-action" type="button" data-auth data-mode="in">Sign in</button>
+        <button class="account-action" type="button" data-auth data-mode="in">로그인</button>
       </div>
     </header>
 
     <main class="hero" id="top">
-      <h1>We build websites and design.</h1>
+      <h1>웹사이트와 디자인을 만듭니다.</h1>
       <p>
-        We design and build websites and product screens. We add the features a service
-        needs and shape them so people can understand them. We also build helpful programs.
+        웹사이트와 제품 화면을 기획·디자인·구축합니다. 서비스에 필요한 기능을 더하고,
+        사람들이 쉽게 이해하도록 다듬습니다. 업무에 도움이 되는 프로그램도 만듭니다.
       </p>
       <button class="action" type="button" data-download disabled>AutoCation</button>
     </main>
 
     <section class="work" id="work" aria-labelledby="work-title">
       <div class="work-panel" data-reveal>
-        <h2 id="work-title">Services</h2>
+        <h2 id="work-title">서비스</h2>
         <p class="work-lead">
-          We build websites, refresh designs, and create leaflets, brochures, and presentations.
-          For other design work, send an additional inquiry.
+          웹사이트 제작, 디자인 개편, 리플렛·브로슈어, 발표 자료까지 함께합니다.
+          그 밖의 디자인 작업은 별도로 문의해 주세요.
         </p>
 
         <div class="work-spotlight" role="list">
           <article class="work-spot" role="listitem">
             <img
               src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1000&q=80"
-              alt=""
+              alt="웹사이트 제작 작업 화면"
               width="1000"
               height="700"
               loading="lazy"
@@ -75,16 +143,16 @@
               </span>
             </div>
             <div class="work-spot-copy">
-              <span class="work-spot-tag">Development &amp; UX</span>
-              <h3>Website</h3>
-              <p>Plan, design, and build websites that introduce a service clearly.</p>
+              <span class="work-spot-tag">개발 &amp; UX</span>
+              <h3>웹사이트</h3>
+              <p>서비스를 분명하게 소개하는 웹사이트를 기획·디자인·구축합니다.</p>
             </div>
           </article>
 
           <article class="work-spot" role="listitem">
             <img
               src="https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1000&q=80"
-              alt=""
+              alt="디자인 개편 작업"
               width="1000"
               height="700"
               loading="lazy"
@@ -106,16 +174,16 @@
               </span>
             </div>
             <div class="work-spot-copy">
-              <span class="work-spot-tag work-spot-tag--pink">Maintenance</span>
-              <h3>Design Updates</h3>
-              <p>Refresh screens, visuals, and details so an existing site feels current.</p>
+              <span class="work-spot-tag work-spot-tag--pink">유지보수</span>
+              <h3>디자인 개편</h3>
+              <p>화면과 비주얼을 다듬어 기존 사이트가 더 최신처럼 느껴지게 합니다.</p>
             </div>
           </article>
 
           <article class="work-spot" role="listitem">
             <img
               src="https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&w=1000&q=80"
-              alt=""
+              alt="리플렛과 브로슈어 디자인"
               width="1000"
               height="700"
               loading="lazy"
@@ -137,16 +205,16 @@
               </span>
             </div>
             <div class="work-spot-copy">
-              <span class="work-spot-tag work-spot-tag--purple">Print &amp; Editorial</span>
-              <h3>Leaflet &amp; Brochure</h3>
-              <p>Create print-ready leaflets and brochures that explain a product or offer simply.</p>
+              <span class="work-spot-tag work-spot-tag--purple">인쇄 &amp; 편집</span>
+              <h3>리플렛·브로슈어</h3>
+              <p>제품과 제안을 쉽게 설명하는 인쇄용 리플렛·브로슈어를 만듭니다.</p>
             </div>
           </article>
 
           <article class="work-spot" role="listitem">
             <img
               src="https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=1000&q=80"
-              alt=""
+              alt="PPT 발표 자료 제작"
               width="1000"
               height="700"
               loading="lazy"
@@ -168,69 +236,69 @@
               </span>
             </div>
             <div class="work-spot-copy">
-              <span class="work-spot-tag work-spot-tag--green">Presentation</span>
-              <h3>PPT Creation</h3>
-              <p>Build presentation decks for pitches, reports, and client meetings.</p>
+              <span class="work-spot-tag work-spot-tag--green">프레젠테이션</span>
+              <h3>PPT 제작</h3>
+              <p>피치, 보고, 미팅용 발표 자료를 구성하고 디자인합니다.</p>
             </div>
           </article>
         </div>
 
         <aside class="work-etc">
           <div class="work-etc-copy">
-            <h3>Etc. / Other design</h3>
+            <h3>기타 디자인</h3>
             <p>
-              Branding, banners, icons, and other design needs — send an additional inquiry.
+              브랜딩, 배너, 아이콘 등 다른 디자인 요청도 문의해 주세요.
             </p>
           </div>
-          <a class="work-etc-action" href="#contact" data-inquiry-type="Other design">Ask about other design</a>
+          <a class="work-etc-action" href="#contact" data-inquiry-type="Other design">기타 디자인 문의</a>
         </aside>
       </div>
     </section>
 
     <section class="contact" id="contact" aria-labelledby="contact-title">
       <div class="contact-panel" data-reveal>
-        <h2 id="contact-title">Contact</h2>
+        <h2 id="contact-title">문의</h2>
         <p class="contact-lead">
-          Send an inquiry about a new project, maintenance, defect repair, or other design work.
+          신규 프로젝트, 유지보수, 결함 수정, 기타 디자인에 대해 문의해 주세요.
         </p>
 
         <form class="contact-form" data-contact-form>
           <fieldset class="contact-types">
-            <legend class="sr-only">Inquiry type</legend>
+            <legend class="sr-only">문의 유형</legend>
             <label class="contact-type">
               <input type="radio" name="type" value="New project" checked />
-              <span>New project</span>
+              <span>신규 프로젝트</span>
             </label>
             <label class="contact-type">
               <input type="radio" name="type" value="Maintenance" />
-              <span>Maintenance</span>
+              <span>유지보수</span>
             </label>
             <label class="contact-type">
               <input type="radio" name="type" value="Defect repair" />
-              <span>Defect repair</span>
+              <span>결함 수정</span>
             </label>
             <label class="contact-type">
               <input type="radio" name="type" value="Other design" />
-              <span>Other design</span>
+              <span>기타 디자인</span>
             </label>
           </fieldset>
 
           <label class="field">
-            <span>Name</span>
+            <span>이름</span>
             <input name="name" type="text" maxlength="80" required autocomplete="name" />
           </label>
 
           <label class="field">
-            <span>Email</span>
+            <span>이메일</span>
             <input name="email" type="email" maxlength="120" required autocomplete="email" />
           </label>
 
           <label class="field">
-            <span>Message</span>
+            <span>메시지</span>
             <textarea name="message" rows="5" maxlength="2000" required></textarea>
           </label>
 
-          <button class="contact-submit" type="submit">Send</button>
+          <button class="contact-submit" type="submit">보내기</button>
           <p class="contact-status" data-contact-status role="status" aria-live="polite"></p>
         </form>
       </div>
@@ -239,7 +307,7 @@
     <section class="showcase" id="showcase" aria-labelledby="showcase-title">
       <div class="showcase-intro">
         <div class="showcase-intro-top">
-          <h2 id="showcase-title">Projects in motion</h2>
+          <h2 id="showcase-title">진행 중인 프로젝트</h2>
           <button class="showcase-view-all" type="button" data-showcase-open>
             전체보기
             <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false">
@@ -248,7 +316,7 @@
           </button>
         </div>
         <p class="showcase-lead">
-          Selected client work rolling in one line.
+          선정한 클라이언트 작업을 한 줄로 흘려 보여 줍니다.
         </p>
       </div>
 
@@ -363,17 +431,17 @@
         <div class="showcase-metrics">
           <div>
             <p class="showcase-metric-value">7</p>
-            <p class="showcase-metric-label">Featured projects</p>
+            <p class="showcase-metric-label">주요 프로젝트</p>
           </div>
           <div class="showcase-metric-rule" aria-hidden="true"></div>
           <div>
             <p class="showcase-metric-value">Etc.</p>
-            <p class="showcase-metric-label">Other design on request</p>
+            <p class="showcase-metric-label">기타 디자인도 가능</p>
           </div>
           <div class="showcase-metric-rule" aria-hidden="true"></div>
           <div>
             <p class="showcase-metric-value">100%</p>
-            <p class="showcase-metric-label">Responsive builds</p>
+            <p class="showcase-metric-label">반응형 구축</p>
           </div>
         </div>
       </div>
@@ -381,12 +449,12 @@
       <dialog class="showcase-dialog" data-showcase-dialog aria-labelledby="showcase-dialog-title">
         <div class="showcase-dialog-panel">
           <header class="showcase-dialog-head">
-            <h2 id="showcase-dialog-title">All projects</h2>
+            <h2 id="showcase-dialog-title">전체 프로젝트</h2>
             <button
               class="showcase-dialog-close"
               type="button"
               data-showcase-close
-              aria-label="Close"
+              aria-label="닫기"
             >
               <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
                 <path
@@ -468,9 +536,9 @@
     <footer class="site-footer">
       <p class="site-footer-copy">© 2026 Santamonica Boy</p>
       <ul class="site-footer-links">
-        <li><a href="#work">Services</a></li>
-        <li><a href="#contact">Contact</a></li>
-        <li><a href="#top">Home</a></li>
+        <li><a href="#work">서비스</a></li>
+        <li><a href="#contact">문의</a></li>
+        <li><a href="#top">홈</a></li>
       </ul>
     </footer>
 
@@ -478,7 +546,7 @@
       class="to-top"
       type="button"
       data-to-top
-      aria-label="Back to top"
+      aria-label="맨 위로"
       hidden
     >
       <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
