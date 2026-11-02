@@ -74,7 +74,7 @@ function setDownloadNeedsSignIn() {
   downloadButton.classList.remove("is-ready");
   downloadButton.classList.add("is-signin");
   downloadButton.removeAttribute("aria-busy");
-  downloadButton.title = "로그인 후 AutoCation을 받을 수 있습니다";
+  downloadButton.title = "Sign in to download AutoCation";
 }
 
 function setDownloadReady(url) {
@@ -182,14 +182,14 @@ function updateAuthUi(user) {
   if (!authButton || !authStatus) return;
 
   if (user) {
-    authStatus.textContent = user.email || "로그인됨";
+    authStatus.textContent = user.email || "Signed in";
     authStatus.hidden = false;
-    authButton.textContent = "로그아웃";
+    authButton.textContent = "Sign out";
     authButton.dataset.mode = "out";
   } else {
     authStatus.textContent = "";
     authStatus.hidden = true;
-    authButton.textContent = "로그인";
+    authButton.textContent = "Sign in";
     authButton.dataset.mode = "in";
     setAdminLink(false);
   }
@@ -215,13 +215,13 @@ function setupContactForm() {
     const message = String(formData.get("message") || "").trim();
 
     if (!INQUIRY_TYPES.has(type) || !name || !email || !message) {
-      setContactMessage("입력 내용을 확인해 주세요.", "is-error");
+      setContactMessage("Please check your input.", "is-error");
       return;
     }
 
     const submitButton = contactForm.querySelector('button[type="submit"]');
     if (submitButton) submitButton.disabled = true;
-    setContactMessage("보내는 중…");
+    setContactMessage("Sending…");
 
     try {
       await addDoc(collection(db, "inquiries"), {
@@ -265,10 +265,10 @@ function setupContactForm() {
       contactForm.reset();
       const defaultType = contactForm.querySelector('input[name="type"][value="New project"]');
       if (defaultType) defaultType.checked = true;
-      setContactMessage("문의가 접수되었습니다. 감사합니다.", "is-success");
+      setContactMessage("Thanks. Your inquiry was received.", "is-success");
     } catch (error) {
       console.error("Failed to submit inquiry:", error);
-      setContactMessage("전송에 실패했습니다. 잠시 후 다시 시도해 주세요.", "is-error");
+      setContactMessage("Something went wrong. Please try again.", "is-error");
     } finally {
       if (submitButton) submitButton.disabled = false;
     }

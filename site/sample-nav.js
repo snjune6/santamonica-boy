@@ -29,7 +29,7 @@
   const homeItem = document.createElement("li");
   const homeLink = document.createElement("a");
   homeLink.href = "/";
-  homeLink.textContent = "홈";
+  homeLink.textContent = "Home";
   if (path === "/") homeLink.setAttribute("aria-current", "page");
   homeItem.appendChild(homeLink);
   list.appendChild(homeItem);
