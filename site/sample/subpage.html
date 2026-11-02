@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>서브페이지 샘플 — Santamonica Boy</title>
+    <meta name="description" content="Subpage design samples." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body class="sample-page">
+    <header class="top">
+      <a class="brand" href="/">Santamonica Boy</a>
+      <nav class="menu" aria-label="Sample categories">
+        <a href="/sample">Samples</a>
+        <a href="/sample/main">메인</a>
+        <a href="/sample/subpage" aria-current="page">서브페이지</a>
+        <a href="/sample/board">게시판</a>
+        <a href="/sample/etc">기타</a>
+      </nav>
+    </header>
+
+    <main class="sample-shell">
+      <div class="sample-intro">
+        <p class="sample-crumb"><a href="/sample">Samples</a> / 서브페이지</p>
+        <h1>서브페이지</h1>
+        <p class="sample-lead">소개·상세 등 하위 페이지 디자인 샘플입니다. 준비 중인 항목은 곧 추가됩니다.</p>
+      </div>
+
+      <ul class="sample-list-grid">
+        <li>
+          <article class="sample-item is-pending" aria-disabled="true">
+            <span class="sample-item-status">준비 중</span>
+            <h2>Subpage sample 01</h2>
+            <p>회사·서비스 소개 페이지</p>
+          </article>
+        </li>
+        <li>
+          <article class="sample-item is-pending" aria-disabled="true">
+            <span class="sample-item-status">준비 중</span>
+            <h2>Subpage sample 02</h2>
+            <p>프로젝트 상세 페이지</p>
+          </article>
+        </li>
+        <li>
+          <article class="sample-item is-pending" aria-disabled="true">
+            <span class="sample-item-status">준비 중</span>
+            <h2>Subpage sample 03</h2>
+            <p>문의·연락 페이지</p>
+          </article>
+        </li>
+      </ul>
+    </main>
+
+    <footer class="site-footer">
+      <p class="site-footer-copy">© 2026 Santamonica Boy</p>
+      <ul class="site-footer-links">
+        <li><a href="/">Home</a></li>
+        <li><a href="/sample">Samples</a></li>
+      </ul>
+    </footer>
+
+    <script src="../bg-web.js" defer></script>
+    <script src="../sample-nav.js" defer></script>
+  </body>
+</html>
