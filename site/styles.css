@@ -1184,6 +1184,14 @@ canvas {
   letter-spacing: -0.01em;
 }
 
+.site-footer.is-copy-only {
+  padding-left: max(var(--edge), 88px);
+}
+
+.site-footer.is-copy-only .site-footer-copy span {
+  display: inline-block;
+}
+
 .site-footer-links {
   display: flex;
   flex-wrap: wrap;
@@ -1342,6 +1350,14 @@ canvas {
   .site-footer-links {
     justify-content: center;
     gap: 8px 16px;
+  }
+
+  .site-footer.is-copy-only {
+    padding: 16px var(--gutter) 80px;
+  }
+
+  .site-footer.is-copy-only .site-footer-copy {
+    text-align: center;
   }
 
   .to-top {
