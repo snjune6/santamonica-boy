@@ -1,3 +1,16 @@
 .firebase/
 firebase-debug.log
 *.log
+
+# secrets
+.env
+.env.*
+*-firebase-adminsdk-*.json
+serviceAccount*.json
+*.pem
+
+# git bundles
+*.bundle
+
+# dependencies
+node_modules/
