@@ -679,6 +679,15 @@ canvas {
   }
 }
 
+.contact-hp {
+  position: absolute;
+  left: -10000px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
 .contact-types {
   display: flex;
   flex-wrap: wrap;

@@ -35,6 +35,8 @@ const firebaseConfig = {
 const INSTALLER_PATH = "downloads/AutoCation-Setup.exe";
 // FormSubmit form id (hides the inbox address in client code)
 const CONTACT_FORM_ID = "a26d0d3ae0d2ffd5377fe997d3e82282";
+// Hidden field only bots fill; never stored in Firestore (inquiries rules use hasOnly)
+const HONEYPOT_FIELD = "hp_ref";
 const INQUIRY_TYPES = new Set([
   "New project",
   "Maintenance",
@@ -202,6 +204,13 @@ function setContactMessage(message, state = "") {
   if (state) contactStatus.classList.add(state);
 }
 
+function finishContactForm() {
+  contactForm.reset();
+  const defaultType = contactForm.querySelector('input[name="type"][value="New project"]');
+  if (defaultType) defaultType.checked = true;
+  setContactMessage("Thanks. Your inquiry was received.", "is-success");
+}
+
 function setupContactForm() {
   if (!contactForm) return;
 
@@ -213,6 +222,12 @@ function setupContactForm() {
     const name = String(formData.get("name") || "").trim();
     const email = String(formData.get("email") || "").trim();
     const message = String(formData.get("message") || "").trim();
+    const honey = String(formData.get(HONEYPOT_FIELD) || "");
+
+    if (honey) {
+      finishContactForm();
+      return;
+    }
 
     if (!INQUIRY_TYPES.has(type) || !name || !email || !message) {
       setContactMessage("Please check your input.", "is-error");
@@ -237,6 +252,7 @@ function setupContactForm() {
       mailBody.append("_replyto", email);
       mailBody.append("_template", "table");
       mailBody.append("_captcha", "false");
+      mailBody.append("_honey", honey);
       mailBody.append("_url", "https://santamonica-boy.web.app/");
       mailBody.append("Type", type);
       mailBody.append("Name", name);
@@ -262,10 +278,7 @@ function setupContactForm() {
         );
       }
 
-      contactForm.reset();
-      const defaultType = contactForm.querySelector('input[name="type"][value="New project"]');
-      if (defaultType) defaultType.checked = true;
-      setContactMessage("Thanks. Your inquiry was received.", "is-success");
+      finishContactForm();
     } catch (error) {
       console.error("Failed to submit inquiry:", error);
       setContactMessage("Something went wrong. Please try again.", "is-error");
