@@ -6,7 +6,7 @@
 | --- | --- | --- | --- |
 | 대표 홈페이지 | `snjune6/santamonica-boy` | https://santamonica-boy.web.app | 소개, Google 로그인, 설치 파일 받기, 문의 보내기 |
 | 관리자 | `snjune6/santamonica-admin` | https://santamonica-admin--santamonica-boy.asia-east1.hosted.app | role이 관리자인 Google 계정만 들어와서 문의 목록·AutoCaption 허용 관리 |
-| 프로그램 | `snjune6/AutoCation` | 설치 파일 `AutoCation-Setup-0.4.4.exe` | 로그인 후 화면을 캡처해 Gemini, Claude, ChatGPT로 보냄 |
+| 프로그램 | `snjune6/AutoCation` | 설치 파일 `AutoCation-Setup-0.4.5.exe` | 로그인 후 화면을 캡처해 Gemini, Claude, ChatGPT로 보냄 |
 
 ## 공통 데이터
 
@@ -22,7 +22,7 @@
 
 문의는 홈페이지에서 Firestore `inquiries`로 들어가고, 관리자 화면에서만 읽습니다. 일반 사용자는 문의 목록을 읽지 못합니다.
 
-프로그램 버전은 Firestore `app/release`의 `latestVersion`과 설치 파일 버전이 같아야 실행됩니다. 현재 기준 버전은 `0.4.4`입니다.
+프로그램 버전은 Firestore `app/release`의 `latestVersion`과 설치 파일 버전이 같아야 실행됩니다. 현재 기준 버전은 `0.4.5`입니다.
 
 ## 직접 수정하는 값
 
