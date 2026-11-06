@@ -67,4 +67,16 @@ firebase deploy --only hosting --project santamonica-boy
 - 이슈: `.github/ISSUE_TEMPLATE/`
 - PR: `.github/pull_request_template.md`
 
-main에 합쳐도 자동으로 배포되지 않습니다. 배포는 `firebase deploy --only hosting`으로 따로 합니다.
+main에 합쳐도 자동으로 배포되지 않습니다. 화면과 규칙은 따로 올립니다.
+
+화면(`site/`):
+
+```
+firebase deploy --only hosting --project santamonica-boy
+```
+
+규칙(Firestore, Storage):
+
+```
+firebase deploy --only firestore:rules,storage --project santamonica-boy
+```
