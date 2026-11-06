@@ -15,6 +15,9 @@ Santamonica Boy 대표 홈페이지입니다. 정적 사이트이고 Firebase Ho
 │   ├── app.js
 │   ├── assets/        # 이미지, 아이콘
 │   └── ...
+├── .github/           # 이슈, PR 템플릿
+│   ├── ISSUE_TEMPLATE/
+│   └── pull_request_template.md
 ├── docs/service.md    # 서비스 전체 정리
 ├── firebase.json      # Hosting, Firestore, Storage 설정
 ├── firestore.rules    # Firestore 보안 규칙
@@ -39,3 +42,29 @@ firebase emulators:start --only hosting --project santamonica-boy
 ```
 firebase deploy --only hosting --project santamonica-boy
 ```
+
+## 작업 방식
+
+모든 작업은 이슈에서 시작해 PR로 합칩니다.
+
+1. 이슈를 만듭니다. 템플릿은 '작업 요청' 또는 '문제 신고'를 고릅니다.
+2. 작업 브랜치를 만듭니다.
+3. PR을 엽니다. 본문에 `Closes #번호`를 적습니다.
+4. 리뷰를 받습니다.
+5. main에 합칩니다.
+6. 작업 브랜치를 삭제합니다.
+7. 화면(`site/`)이나 규칙이 바뀌었으면 배포합니다.
+
+브랜치 이름:
+
+- `feature/...`: 기능
+- `fix/...`: 문제 수정
+- `docs/...`: 문서
+- `chore/...`: 설정, 정리
+
+템플릿 위치:
+
+- 이슈: `.github/ISSUE_TEMPLATE/`
+- PR: `.github/pull_request_template.md`
+
+main에 합쳐도 자동으로 배포되지 않습니다. 배포는 `firebase deploy --only hosting`으로 따로 합니다.
