@@ -1734,3 +1734,109 @@ canvas {
     bottom: 16px;
   }
 }
+
+/* In-place swarm: decorative only — page stays clickable */
+.swarm-live-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+
+.swarm-live-layer.is-visible {
+  opacity: 1;
+}
+
+.swarm-live-agent {
+  position: fixed;
+  top: 0;
+  left: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 2px;
+  will-change: transform;
+  transform: translate3d(-40px, -40px, 0);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.16));
+  pointer-events: none;
+}
+
+.swarm-live-pointer {
+  display: block;
+  flex: none;
+}
+
+.swarm-live-label {
+  margin-top: 14px;
+  margin-left: -2px;
+  padding: 2px 7px 3px;
+  border-radius: 4px;
+  color: #fff;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.swarm-live-rect {
+  position: fixed;
+  box-sizing: border-box;
+  border: 1.5px solid #2563eb;
+  background: rgba(13, 153, 255, 0.06);
+  border-radius: 2px;
+  opacity: 0.45;
+  pointer-events: none;
+  transition: opacity 280ms ease;
+}
+
+.swarm-live-rect.is-done {
+  opacity: 0;
+}
+
+.swarm-live-badge {
+  position: fixed;
+  top: 0;
+  left: 0;
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: #fff;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+html.swarm-live .swarm-live-target {
+  opacity: 0;
+  transform: translateY(8px) scale(0.99);
+  transition:
+    opacity 320ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 380ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+html.swarm-live .swarm-live-target.is-built {
+  opacity: 1;
+  transform: none;
+}
+
+html.swarm-live .work-panel,
+html.swarm-live .contact-panel {
+  opacity: 1;
+  transform: none;
+}
+
+@media (pointer: coarse), (prefers-reduced-motion: reduce) {
+  .swarm-live-layer {
+    display: none !important;
+  }
+
+  html.swarm-live .swarm-live-target {
+    opacity: 1;
+    transform: none;
+  }
+}
+

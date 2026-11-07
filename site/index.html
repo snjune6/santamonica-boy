@@ -553,6 +553,7 @@
       class="to-top"
       type="button"
       data-to-top
+      data-swarm-ignore
       aria-label="Back to top"
       hidden
     >
@@ -566,5 +567,17 @@
 
     <script type="module" src="app.js"></script>
     <script src="sample-nav.js" defer></script>
+    <!-- Instagram-style Swarm Rebuild: auto play + Rebuild button (Alt+Shift+S). Credit in swarm-cursors.js -->
+    <script
+      src="swarm-cursors.js"
+      defer
+      data-trigger="auto"
+      data-label="Rebuild"
+      data-position="bottom-right"
+      data-delay="800"
+      data-once="session"
+      data-hotkey="alt+shift+s"
+      data-reduced-motion="skip"
+    ></script>
   </body>
 </html>

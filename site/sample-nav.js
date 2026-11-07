@@ -16,6 +16,7 @@
   const root = document.createElement("div");
   root.className = "sample-float";
   root.setAttribute("data-sample-nav", "");
+  root.setAttribute("data-swarm-ignore", "");
 
   const panel = document.createElement("nav");
   panel.className = "sample-float-panel";
