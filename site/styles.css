@@ -1848,7 +1848,9 @@ html.swarm-live .contact-panel {
 
 .posts-constellation-page {
   height: 100vh;
+  height: 100dvh;
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -1857,6 +1859,12 @@ html.swarm-live .contact-panel {
 .posts-constellation-page .posts-workspace {
   flex: 1 1 auto;
   min-height: 0;
+}
+
+@media (max-width: 900px) {
+  .posts-constellation-page .site-footer.is-copy-only {
+    display: none;
+  }
 }
 
 .posts-shell,

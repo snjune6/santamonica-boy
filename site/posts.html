@@ -21,12 +21,17 @@
     <link rel="stylesheet" href="/styles.css" />
     <style>
       .posts-constellation-page {
+        height: 100vh;
+        height: 100dvh;
         overflow: hidden;
         background: #f8fafc;
+        overscroll-behavior: none;
       }
 
       .posts-constellation-page .top {
         position: relative;
+        z-index: 30;
+        flex-shrink: 0;
         background: rgba(255, 255, 255, 0.92);
         backdrop-filter: blur(10px);
       }
@@ -58,6 +63,7 @@
         height: 100%;
         touch-action: none;
         cursor: grab;
+        image-rendering: auto;
       }
 
       .constellation-stage canvas#constellationCanvas:active {
@@ -66,8 +72,8 @@
 
       .constellation-controls {
         position: absolute;
-        top: 16px;
-        right: 16px;
+        top: max(12px, env(safe-area-inset-top));
+        right: max(12px, env(safe-area-inset-right));
         z-index: 10;
         display: flex;
         flex-direction: column;
@@ -103,13 +109,15 @@
 
       .constellation-hint {
         position: absolute;
-        left: 16px;
-        bottom: 16px;
+        left: max(12px, env(safe-area-inset-left));
+        bottom: max(12px, env(safe-area-inset-bottom));
         z-index: 10;
+        max-width: calc(100% - 120px);
         pointer-events: none;
         color: #94a3b8;
         font-family: "JetBrains Mono", monospace;
         font-size: 11px;
+        line-height: 1.4;
       }
 
       .detail-panel {
@@ -334,9 +342,14 @@
       .posts-constellation-page .site-footer {
         position: relative;
         z-index: 12;
+        flex-shrink: 0;
         background: #fff;
         border-top: 1px solid #ececec;
         margin-top: 0;
+      }
+
+      .posts-constellation-page .site-footer.is-copy-only {
+        padding: 10px 16px;
       }
 
       ::-webkit-scrollbar {
@@ -490,13 +503,42 @@
       }
 
       @media (max-width: 900px) {
+        .posts-constellation-page .top {
+          min-height: 0;
+          padding-top: 12px;
+          padding-bottom: 10px;
+        }
+
+        .constellation-controls {
+          top: 10px;
+          right: 10px;
+        }
+
+        .constellation-controls button {
+          min-height: 36px;
+          padding: 0 12px;
+          font-size: 11px;
+        }
+
+        .constellation-hint {
+          bottom: max(10px, env(safe-area-inset-bottom));
+          font-size: 10px;
+        }
+
+        .posts-workspace.is-split .constellation-hint {
+          opacity: 0;
+        }
+
         .detail-panel {
           top: auto;
           left: 0;
+          right: 0;
           width: 100%;
-          height: min(62vh, 720px);
+          height: min(82dvh, 820px);
+          max-height: calc(100dvh - 72px);
           border-left: 0;
           border-top: 1px solid #e8eef5;
+          border-radius: 20px 20px 0 0;
           box-shadow: 0 -18px 40px -28px rgba(15, 23, 42, 0.28);
           transform: translate3d(0, 104%, 0);
         }
@@ -505,6 +547,87 @@
           transform: translate3d(0, 0, 0);
         }
 
+        .detail-panel-toolbar {
+          padding: 12px 16px calc(12px + 2px);
+          padding-top: 18px;
+          position: relative;
+        }
+
+        .detail-panel-toolbar::before {
+          content: "";
+          position: absolute;
+          top: 8px;
+          left: 50%;
+          width: 36px;
+          height: 4px;
+          border-radius: 999px;
+          background: #dbe3ee;
+          transform: translateX(-50%);
+        }
+
+        .detail-panel-scroll {
+          padding: 16px 16px calc(28px + env(safe-area-inset-bottom));
+          -webkit-overflow-scrolling: touch;
+        }
+
+        .detail-panel-title {
+          font-size: clamp(22px, 6vw, 28px);
+          margin-bottom: 12px;
+        }
+
+        .detail-share {
+          margin-bottom: 16px;
+        }
+
+        .share-icon {
+          width: 40px;
+          height: 40px;
+        }
+
+        .posts-constellation-page .site-footer {
+          display: none;
+        }
+
+        #node-modal {
+          padding: 12px;
+          align-items: flex-end;
+        }
+
+        .node-modal-card {
+          max-width: 100%;
+          max-height: min(88dvh, 920px);
+          border-radius: 20px;
+        }
+
+        .node-modal-body {
+          padding: 20px 16px 16px;
+          gap: 12px;
+        }
+
+        .node-modal-scroll {
+          max-height: 22vh;
+        }
+
+        .node-modal-actions {
+          gap: 8px;
+        }
+
+        .node-modal-secondary,
+        .node-modal-primary {
+          flex: 1 1 auto;
+          min-height: 44px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .detail-panel {
+          height: min(88dvh, 100%);
+          max-height: calc(100dvh - 56px);
+        }
+
+        .constellation-hint {
+          max-width: calc(100% - 24px);
+        }
       }
     </style>
   </head>
@@ -543,7 +666,8 @@
         <div id="boot-status">Loading constellation…</div>
         <canvas id="constellationCanvas"></canvas>
         <p class="constellation-hint">
-          Nodes: <span id="node-count">0</span> · Click node to inspect
+          Nodes: <span id="node-count">0</span>
+          <span class="constellation-hint-rest"> · Drag to move · Tap node</span>
         </p>
       </div>
 
@@ -727,7 +851,7 @@
     </div>
 
     <script type="module" src="/app.js"></script>
-    <script type="module" src="/posts-constellation.js?v=10"></script>
+    <script type="module" src="/posts-constellation.js?v=13"></script>
     <script src="/sample-nav.js" defer></script>
   </body>
 </html>

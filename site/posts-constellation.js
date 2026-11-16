@@ -23,6 +23,7 @@ const detailBody = document.querySelector("[data-detail-body]");
 
 let width = 0;
 let height = 0;
+let dpr = 1;
 let detailRequestId = 0;
 let activeDetailSlug = "";
 
@@ -30,9 +31,18 @@ function resizeCanvas() {
   const rect = stage.getBoundingClientRect();
   const nextW = Math.max(1, Math.floor(rect.width));
   const nextH = Math.max(1, Math.floor(rect.height));
-  if (nextW === width && nextH === height) return;
-  width = canvas.width = nextW;
-  height = canvas.height = nextH;
+  const nextDpr = Math.min(window.devicePixelRatio || 1, 3);
+  if (nextW === width && nextH === height && nextDpr === dpr) return;
+
+  width = nextW;
+  height = nextH;
+  dpr = nextDpr;
+  canvas.width = Math.max(1, Math.floor(nextW * dpr));
+  canvas.height = Math.max(1, Math.floor(nextH * dpr));
+  canvas.style.width = `${nextW}px`;
+  canvas.style.height = `${nextH}px`;
+  // Draw in CSS pixels while backing store matches device pixels.
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
 
 resizeCanvas();
@@ -57,31 +67,54 @@ let startY = 0;
 let hoveredNode = null;
 let draggedNode = null;
 let hasMoved = false;
+let activePointerId = null;
+let pinchStartDistance = 0;
+let pinchStartZoom = 1;
+
+function isCompactLayout() {
+  return window.matchMedia("(max-width: 900px)").matches;
+}
+
+function hitRadius() {
+  return isCompactLayout() ? 38 : 30;
+}
+
+function postStep() {
+  return isCompactLayout() ? 72 : 85;
+}
 
 function categoryAnchor(index, total) {
-  if (total <= 1) return { x: 0, y: 40 };
-  if (total === 2) return index === 0 ? { x: -180, y: 0 } : { x: 180, y: 0 };
-  const spread = Math.min(520, 160 * (total - 1));
+  const compact = isCompactLayout();
+  if (total <= 1) return { x: 0, y: compact ? 28 : 40 };
+  if (total === 2) {
+    return index === 0
+      ? { x: compact ? -110 : -180, y: 0 }
+      : { x: compact ? 110 : 180, y: 0 };
+  }
+  const spread = Math.min(compact ? 280 : 520, (compact ? 100 : 160) * (total - 1));
   const start = -spread / 2;
   const step = spread / (total - 1);
-  return { x: start + step * index, y: 30 + (index % 2) * 24 };
+  return { x: start + step * index, y: (compact ? 20 : 30) + (index % 2) * (compact ? 18 : 24) };
 }
 
 function buildBaseNodes() {
+  const compact = isCompactLayout();
+  const menuGap = compact ? 108 : 170;
+  const rootY = compact ? -72 : -120;
+
   const home = {
     id: "menu-home",
     title: "Home",
-    x: -170,
-    y: -120,
-    targetX: -170,
-    targetY: -120,
+    x: -menuGap,
+    y: rootY,
+    targetX: -menuGap,
+    targetY: rootY,
     isMenuNode: true,
     href: "/",
     alpha: 1,
   };
 
-  const rootX = 170;
-  const rootY = -120;
+  const rootX = menuGap;
   const postsRoot = {
     id: "root-posts",
     title: "Posts",
@@ -98,7 +131,7 @@ function buildBaseNodes() {
   const categoryNodes = categories.map((category, index) => {
     const anchor = categoryAnchor(index, categories.length);
     const offsetX = anchor.x;
-    const offsetY = anchor.y + 120;
+    const offsetY = anchor.y + (compact ? 90 : 120);
     const postCount = postsForCategory(category.id).length;
     return {
       id: `cat-${category.id}`,
@@ -142,7 +175,8 @@ function moreNodeId(categoryId) {
 function appendPostNode(catNode, post, index, visiblePosts) {
   const existing = nodes.find((node) => node.id === post.id);
   const parentId = index === 0 ? catNode.id : visiblePosts[index - 1].id;
-  const targetOffsetY = 90 + index * 85;
+  const step = postStep();
+  const targetOffsetY = (isCompactLayout() ? 72 : 90) + index * step;
 
   if (existing) {
     existing.isClosing = false;
@@ -182,6 +216,7 @@ function syncMoreNode(catNode, visibleCount, totalCount) {
   const remaining = totalCount - visibleCount;
   const lastPost = postsForCategory(catNode.categoryId)[visibleCount - 1];
   const parentId = lastPost?.id || catNode.id;
+  const step = postStep();
 
   nodes.push({
     id,
@@ -191,7 +226,7 @@ function syncMoreNode(catNode, visibleCount, totalCount) {
     x: catNode.x,
     y: catNode.y,
     targetX: catNode.x,
-    targetY: catNode.y + 90 + visibleCount * 85,
+    targetY: catNode.y + (isCompactLayout() ? 72 : 90) + visibleCount * step,
     parentId,
     isMoreNode: true,
     isCategoryNode: false,
@@ -209,12 +244,13 @@ function showCategoryPosts(catNode, fromIndex = 0) {
     appendPostNode(catNode, visible[index], index, visible);
   }
 
+  const step = postStep();
   visible.forEach((post, index) => {
     const node = nodes.find((item) => item.id === post.id);
     if (!node) return;
     node.parentId = index === 0 ? catNode.id : visible[index - 1].id;
     node.targetX = catNode.x;
-    node.targetY = catNode.y + 90 + index * 85;
+    node.targetY = catNode.y + (isCompactLayout() ? 72 : 90) + index * step;
   });
 
   syncMoreNode(catNode, limit, all.length);
@@ -464,45 +500,129 @@ async function openDetailPanel(slug) {
   }
 }
 
+function defaultZoom() {
+  return isCompactLayout() ? 0.82 : 1;
+}
+
 function resetView() {
   closeModal();
   if (workspace?.classList.contains("is-split")) closeDetailPanel();
+  const z = defaultZoom();
   targetCameraX = 0;
   targetCameraY = 0;
-  targetZoom = 1;
+  targetZoom = z;
   cameraX = 0;
   cameraY = 0;
-  zoom = 1;
+  zoom = z;
   buildBaseNodes();
 }
 
-function worldFromEvent(event) {
+function clientPoint(event) {
+  if (event.touches?.length) {
+    return { x: event.touches[0].clientX, y: event.touches[0].clientY };
+  }
+  if (event.changedTouches?.length) {
+    return { x: event.changedTouches[0].clientX, y: event.changedTouches[0].clientY };
+  }
+  return { x: event.clientX, y: event.clientY };
+}
+
+function worldFromClient(clientX, clientY) {
   const rect = canvas.getBoundingClientRect();
   return {
-    x: (event.clientX - rect.left - width / 2) / zoom + cameraX,
-    y: (event.clientY - rect.top - height / 2) / zoom + cameraY,
+    x: (clientX - rect.left - width / 2) / zoom + cameraX,
+    y: (clientY - rect.top - height / 2) / zoom + cameraY,
   };
 }
 
-function hitTest(x, y) {
-  return nodes.find((node) => Math.hypot(node.x - x, node.y - y) < 30);
+function nodeLabel(node) {
+  if (node.isCategoryNode) return `${node.category} [${node.postCount ?? 0}]`;
+  return node.title || "";
 }
 
-window.addEventListener("resize", resizeCanvas);
+function hitsNodeLabel(node, x, y) {
+  const label = nodeLabel(node);
+  if (!label) return false;
 
-canvas.addEventListener("mousedown", (event) => {
-  const point = worldFromEvent(event);
+  if (node.isMenuNode || node.isRootNode) {
+    ctx.font = 'bold 14px "Space Grotesk", sans-serif';
+  } else if (node.isCategoryNode) {
+    ctx.font = 'bold 13px "Space Grotesk", sans-serif';
+  } else if (node.isMoreNode) {
+    ctx.font = '12px "Space Grotesk", sans-serif';
+  } else {
+    ctx.font = '13px "Space Grotesk", sans-serif';
+  }
+
+  const isPost =
+    !node.isMenuNode && !node.isRootNode && !node.isCategoryNode && !node.isMoreNode;
+  const textW = Math.min(
+    isCompactLayout() ? 240 : 340,
+    Math.ceil(ctx.measureText(label).width) + (isPost ? 16 : 12),
+  );
+  const left = node.x + 12;
+  const right = left + textW;
+  const top = node.y - (isPost ? 18 : 14);
+  const bottom = node.y + (isPost ? 24 : 14);
+  return x >= left && x <= right && y >= top && y <= bottom;
+}
+
+function hitTest(x, y) {
+  const radius = hitRadius();
+  // Later nodes are drawn on top; prefer the front-most match.
+  for (let i = nodes.length - 1; i >= 0; i -= 1) {
+    const node = nodes[i];
+    if (node.isClosing || (node.alpha !== undefined && node.alpha <= 0.05)) continue;
+    if (Math.hypot(node.x - x, node.y - y) < radius) return node;
+    if (hitsNodeLabel(node, x, y)) return node;
+  }
+  return null;
+}
+
+function activateNode(node) {
+  if (!node) return;
+  if (node.href) {
+    location.assign(node.href);
+    return;
+  }
+  if (node.isCategoryNode) {
+    toggleCategory(node);
+  } else if (node.isMoreNode) {
+    const catNode = nodes.find(
+      (item) => item.isCategoryNode && item.categoryId === node.categoryId,
+    );
+    if (catNode) loadMoreCategory(catNode);
+  } else if (!node.isMenuNode && !node.isRootNode) {
+    openModal(node);
+  }
+}
+
+function pinchDistance(touches) {
+  const [a, b] = touches;
+  return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+}
+
+function onPointerDown(event) {
+  if (event.pointerType === "mouse" && event.button !== 0) return;
+  if (typeof event.pointerId === "number") {
+    activePointerId = event.pointerId;
+    canvas.setPointerCapture?.(event.pointerId);
+  }
+  const { x: clientX, y: clientY } = clientPoint(event);
+  const point = worldFromClient(clientX, clientY);
   hasMoved = false;
   const clicked = hitTest(point.x, point.y);
   if (clicked) draggedNode = clicked;
   else isDragging = true;
-  startX = event.clientX;
-  startY = event.clientY;
-});
+  startX = clientX;
+  startY = clientY;
+}
 
-window.addEventListener("mousemove", (event) => {
-  const point = worldFromEvent(event);
-  if (Math.abs(event.clientX - startX) > 3 || Math.abs(event.clientY - startY) > 3) hasMoved = true;
+function onPointerMove(event) {
+  if (activePointerId !== null && event.pointerId !== activePointerId) return;
+  const { x: clientX, y: clientY } = clientPoint(event);
+  const point = worldFromClient(clientX, clientY);
+  if (Math.abs(clientX - startX) > 4 || Math.abs(clientY - startY) > 4) hasMoved = true;
 
   if (draggedNode) {
     draggedNode.x = point.x;
@@ -510,51 +630,77 @@ window.addEventListener("mousemove", (event) => {
     draggedNode.y = point.y;
     draggedNode.targetY = point.y;
   } else if (isDragging) {
-    targetCameraX -= (event.clientX - startX) / zoom;
-    targetCameraY -= (event.clientY - startY) / zoom;
-    startX = event.clientX;
-    startY = event.clientY;
-  } else {
-    hoveredNode = null;
-    nodes.forEach((node) => {
-      if (Math.hypot(node.x - point.x, node.y - point.y) < 40) hoveredNode = node;
-    });
-    canvas.style.cursor = hoveredNode ? "pointer" : isDragging ? "grabbing" : "grab";
+    targetCameraX -= (clientX - startX) / zoom;
+    targetCameraY -= (clientY - startY) / zoom;
+    startX = clientX;
+    startY = clientY;
+  } else if (event.pointerType !== "touch") {
+    hoveredNode = hitTest(point.x, point.y);
+    canvas.style.cursor = hoveredNode ? "pointer" : "grab";
   }
-});
+}
 
-window.addEventListener("mouseup", () => {
+function onPointerUp(event) {
+  if (activePointerId !== null && event.pointerId !== activePointerId) return;
+  const shouldActivate = !hasMoved;
+  const { x: clientX, y: clientY } = clientPoint(event);
+  const point = worldFromClient(clientX, clientY);
+  const clicked = hitTest(point.x, point.y);
   draggedNode = null;
   isDragging = false;
+  activePointerId = null;
+  if (shouldActivate) activateNode(clicked);
+}
+
+window.addEventListener("resize", () => {
+  resizeCanvas();
 });
 
-canvas.addEventListener("click", (event) => {
-  if (hasMoved) return;
-  const point = worldFromEvent(event);
-  const clicked = hitTest(point.x, point.y);
-  if (!clicked) return;
-  if (clicked.href) {
-    location.assign(clicked.href);
-    return;
-  }
-  if (clicked.isCategoryNode) {
-    toggleCategory(clicked);
-  } else if (clicked.isMoreNode) {
-    const catNode = nodes.find(
-      (node) => node.isCategoryNode && node.categoryId === clicked.categoryId,
-    );
-    if (catNode) loadMoreCategory(catNode);
-  } else if (!clicked.isMenuNode && !clicked.isRootNode) {
-    openModal(clicked);
-  }
-});
+canvas.addEventListener("pointerdown", onPointerDown);
+window.addEventListener("pointermove", onPointerMove);
+window.addEventListener("pointerup", onPointerUp);
+window.addEventListener("pointercancel", onPointerUp);
+
+canvas.addEventListener(
+  "touchstart",
+  (event) => {
+    if (event.touches.length === 2) {
+      event.preventDefault();
+      draggedNode = null;
+      isDragging = false;
+      pinchStartDistance = pinchDistance(event.touches);
+      pinchStartZoom = targetZoom;
+    }
+  },
+  { passive: false },
+);
+
+canvas.addEventListener(
+  "touchmove",
+  (event) => {
+    if (event.touches.length === 2 && pinchStartDistance > 0) {
+      event.preventDefault();
+      const scale = pinchDistance(event.touches) / pinchStartDistance;
+      targetZoom = Math.min(2.2, Math.max(0.5, pinchStartZoom * scale));
+    }
+  },
+  { passive: false },
+);
+
+canvas.addEventListener(
+  "touchend",
+  (event) => {
+    if (event.touches.length < 2) pinchStartDistance = 0;
+  },
+  { passive: true },
+);
 
 canvas.addEventListener(
   "wheel",
   (event) => {
     event.preventDefault();
     const next = targetZoom * (event.deltaY > 0 ? 0.92 : 1.08);
-    targetZoom = Math.min(2.2, Math.max(0.55, next));
+    targetZoom = Math.min(2.2, Math.max(0.5, next));
   },
   { passive: false },
 );
@@ -613,7 +759,7 @@ function animate() {
       const parent = nodes.find((item) => item.id === node.parentId);
       if (parent) {
         node.targetX = parent.x;
-        node.targetY = parent.y + 85;
+        node.targetY = parent.y + postStep();
       }
     }
 
@@ -730,6 +876,9 @@ try {
   const [cats, posts] = await Promise.all([listVisibleCategories(), listPublishedPosts()]);
   categories = cats;
   allPosts = posts;
+  const z = defaultZoom();
+  zoom = z;
+  targetZoom = z;
   buildBaseNodes();
   if (bootStatus) bootStatus.remove();
   animate();
