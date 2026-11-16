@@ -7,6 +7,12 @@ service firebase.storage {
       allow write: if false;
     }
 
+    // Post thumbnails / body images — public read, Admin SDK write only.
+    match /posts/{postId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     match /{allPaths=**} {
       allow read, write: if false;
     }

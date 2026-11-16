@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Posts | Santamonica Boy</title>
+    <meta name="description" content="Notes and recommended GitHub picks from Santamonica Boy." />
+    <meta name="robots" content="index,follow" />
+    <link rel="canonical" href="https://santamonica-boy.web.app/posts" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body class="posts-page">
+    <header class="top">
+      <a class="brand" href="/">Santamonica Boy</a>
+      <nav class="menu" aria-label="Page">
+        <a href="/posts" aria-current="page">Posts</a>
+      </nav>
+    </header>
+
+    <main class="posts-shell">
+      <header class="posts-intro">
+        <h1>Posts</h1>
+        <p>Published notes and Recommended GitHub picks.</p>
+      </header>
+
+      <div class="posts-filters" data-filters hidden></div>
+      <p class="posts-status" data-status>Loading…</p>
+      <ul class="posts-list" data-list></ul>
+    </main>
+
+    <script type="module" src="/posts-list.js?v=3"></script>
+    <script src="/sample-nav.js" defer></script>
+  </body>
+</html>

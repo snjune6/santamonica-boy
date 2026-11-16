@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Post | Santamonica Boy</title>
+    <meta name="description" content="A post from Santamonica Boy." />
+    <meta name="robots" content="index,follow" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body class="posts-page">
+    <header class="top">
+      <a class="brand" href="/">Santamonica Boy</a>
+      <nav class="menu" aria-label="Page">
+        <a href="/posts">Posts</a>
+      </nav>
+    </header>
+
+    <main class="post-shell">
+      <p class="posts-status" data-status>Loading…</p>
+      <article class="post-article" data-article hidden>
+        <p class="post-meta" data-meta></p>
+        <h1 data-title></h1>
+        <p class="post-date" data-date hidden></p>
+        <img class="post-hero" data-thumb hidden alt="" loading="eager" decoding="async" />
+        <div class="post-prose" data-body></div>
+        <p class="post-back"><a href="/posts">← All posts</a></p>
+      </article>
+    </main>
+
+    <script type="module" src="/post-detail.js?v=3"></script>
+    <script src="/sample-nav.js" defer></script>
+  </body>
+</html>

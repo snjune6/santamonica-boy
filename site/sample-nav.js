@@ -35,6 +35,14 @@
   homeItem.appendChild(homeLink);
   list.appendChild(homeItem);
 
+  const postsItem = document.createElement("li");
+  const postsLink = document.createElement("a");
+  postsLink.href = "/posts";
+  postsLink.textContent = "Posts";
+  if (path === "/posts" || path.startsWith("/posts/")) postsLink.setAttribute("aria-current", "page");
+  postsItem.appendChild(postsLink);
+  list.appendChild(postsItem);
+
   let setDesignOpen = () => {};
 
   if (SHOW_DESIGN_MENU) {

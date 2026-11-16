@@ -49,5 +49,16 @@ service cloud.firestore {
         && request.resource.data.createdAt is timestamp;
       allow read, update, delete: if false;
     }
+
+    // Public blog reads; writes go through Admin SDK only.
+    match /postCategories/{categoryId} {
+      allow read: if resource.data.visible == true;
+      allow write: if false;
+    }
+
+    match /posts/{postId} {
+      allow read: if resource.data.status == 'published';
+      allow write: if false;
+    }
   }
 }
