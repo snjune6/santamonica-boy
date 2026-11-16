@@ -1,38 +1,733 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="ko">
   <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Posts | Santamonica Boy</title>
-    <meta name="description" content="Notes and recommended GitHub picks from Santamonica Boy." />
+    <meta
+      name="description"
+      content="Santamonica Boy Interactive Constellation Archive — browse published posts by category."
+    />
     <meta name="robots" content="index,follow" />
     <link rel="canonical" href="https://santamonica-boy.web.app/posts" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@300;400;500;600&family=JetBrains+Mono:wght@400&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="/styles.css" />
+    <style>
+      .posts-constellation-page {
+        overflow: hidden;
+        background: #f8fafc;
+      }
+
+      .posts-constellation-page .top {
+        position: relative;
+        background: rgba(255, 255, 255, 0.92);
+        backdrop-filter: blur(10px);
+      }
+
+      .posts-workspace {
+        display: flex;
+        flex: 1 1 auto;
+        min-height: 0;
+        width: 100%;
+        overflow: hidden;
+      }
+
+      .posts-workspace {
+        position: relative;
+      }
+
+      .constellation-stage {
+        position: relative;
+        flex: 1 1 auto;
+        width: 100%;
+        min-width: 0;
+        min-height: 0;
+        user-select: none;
+      }
+
+      .constellation-stage canvas#constellationCanvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+        touch-action: none;
+        cursor: grab;
+      }
+
+      .constellation-stage canvas#constellationCanvas:active {
+        cursor: grabbing;
+      }
+
+      .constellation-controls {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        z-index: 10;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 12px;
+      }
+
+      .glass-panel {
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(15, 23, 42, 0.08);
+        box-shadow:
+          0 10px 25px -5px rgba(0, 0, 0, 0.05),
+          0 8px 10px -6px rgba(0, 0, 0, 0.05);
+      }
+
+      .font-mono-custom {
+        font-family: "JetBrains Mono", monospace;
+      }
+
+      #boot-status {
+        position: absolute;
+        inset: 0;
+        z-index: 5;
+        display: grid;
+        place-items: center;
+        pointer-events: none;
+        color: #64748b;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 12px;
+      }
+
+      .constellation-hint {
+        position: absolute;
+        left: 16px;
+        bottom: 16px;
+        z-index: 10;
+        pointer-events: none;
+        color: #94a3b8;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11px;
+      }
+
+      .detail-panel {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 20;
+        width: min(52vw, 640px);
+        min-width: 0;
+        min-height: 0;
+        overflow: hidden;
+        background: linear-gradient(180deg, #ffffff 0%, #fbfcfe 100%);
+        border-left: 1px solid #e8eef5;
+        box-shadow: -24px 0 48px -32px rgba(15, 23, 42, 0.28);
+        opacity: 0;
+        transform: translate3d(104%, 0, 0);
+        pointer-events: none;
+        will-change: transform, opacity;
+        transition:
+          opacity 520ms ease,
+          transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+      }
+
+      .posts-workspace.is-split .detail-panel {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+        pointer-events: auto;
+      }
+
+      .detail-panel-inner {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        min-height: 0;
+        width: 100%;
+      }
+
+      .detail-panel-status,
+      .detail-panel [data-detail-article] {
+        opacity: 0;
+        transform: translateY(10px);
+        transition:
+          opacity 420ms ease,
+          transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
+      }
+
+      .detail-panel-status:not([hidden]),
+      .detail-panel [data-detail-article].is-ready {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .detail-panel-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 16px 20px;
+        border-bottom: 1px solid #eef2f7;
+        background: rgba(255, 255, 255, 0.96);
+      }
+
+      .detail-panel-toolbar button {
+        border: 0;
+        background: transparent;
+        color: #64748b;
+        font-family: Inter, "Segoe UI", sans-serif;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+      }
+
+      .detail-panel-toolbar button:hover {
+        color: #0f172a;
+      }
+
+      .detail-panel-scroll {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto;
+        padding: 24px 28px 40px;
+      }
+
+      .detail-panel-meta {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+
+      .detail-panel-chip {
+        display: inline-flex;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: #eff6ff;
+        color: #0369a1;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      .detail-panel-date {
+        color: #64748b;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 12px;
+      }
+
+      .detail-panel-title {
+        margin: 0 0 16px;
+        color: #0f172a;
+        font-family: Inter, "Segoe UI", sans-serif;
+        font-size: clamp(24px, 3vw, 34px);
+        font-weight: 600;
+        letter-spacing: -0.035em;
+        line-height: 1.2;
+      }
+
+      .share-icons {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .share-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        border: 1px solid #e2e8f0;
+        border-radius: 999px;
+        background: #fff;
+        color: #334155;
+        cursor: pointer;
+        transition:
+          background-color 160ms ease,
+          border-color 160ms ease,
+          color 160ms ease,
+          transform 160ms ease;
+      }
+
+      .share-icon svg {
+        width: 18px;
+        height: 18px;
+        display: block;
+      }
+
+      .share-icon:hover {
+        border-color: #cbd5e1;
+        background: #f8fafc;
+        color: #0f172a;
+      }
+
+      .share-icon.is-kakao {
+        border-color: #fee500;
+        background: #fee500;
+        color: #191919;
+      }
+
+      .share-icon.is-kakao:hover {
+        border-color: #f5dc00;
+        background: #f5dc00;
+        color: #191919;
+      }
+
+      .share-icon.is-copied {
+        border-color: #0284c7;
+        background: #eff6ff;
+        color: #0284c7;
+      }
+
+      .detail-share {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+        margin: 0 0 22px;
+      }
+
+      .detail-share-label {
+        color: #94a3b8;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .detail-share-footer {
+        margin: 28px 0 0;
+        padding-top: 18px;
+        border-top: 1px solid #eef2f7;
+      }
+
+      .node-modal-share {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding-top: 4px;
+      }
+
+      .detail-panel-hero {
+        display: block;
+        width: 100%;
+        margin: 0 0 22px;
+        border: 1px solid #e8eef5;
+        border-radius: 18px;
+        object-fit: cover;
+        background: #f8fafc;
+      }
+
+      .detail-panel-status {
+        color: #64748b;
+        font-size: 14px;
+      }
+
+      .posts-constellation-page .site-footer {
+        position: relative;
+        z-index: 12;
+        background: #fff;
+        border-top: 1px solid #ececec;
+        margin-top: 0;
+      }
+
+      ::-webkit-scrollbar {
+        width: 5px;
+      }
+      ::-webkit-scrollbar-track {
+        background: rgba(241, 245, 249, 0.6);
+        border-radius: 9999px;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: rgba(14, 165, 233, 0.3);
+        border-radius: 9999px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: rgba(14, 165, 233, 0.6);
+      }
+
+      .node-modal-card {
+        background: rgba(255, 255, 255, 0.96);
+        border: 1px solid rgba(15, 23, 42, 0.08);
+        border-radius: 24px;
+        box-shadow:
+          0 24px 60px -28px rgba(15, 23, 42, 0.35),
+          0 10px 24px -18px rgba(15, 23, 42, 0.18);
+        backdrop-filter: blur(18px);
+      }
+
+      .node-modal-media {
+        aspect-ratio: 16 / 9;
+        background: #f1f5f9;
+        overflow: hidden;
+      }
+
+      .node-modal-media img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .node-modal-body {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        padding: 28px;
+        min-height: 0;
+      }
+
+      .node-modal-meta {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .node-modal-chip {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: #eff6ff;
+        color: #0369a1;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      .node-modal-date {
+        color: #64748b;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 12px;
+      }
+
+      .node-modal-title {
+        margin: 0;
+        color: #0f172a;
+        font-family: Inter, "Segoe UI", sans-serif;
+        font-size: clamp(22px, 3vw, 28px);
+        font-weight: 600;
+        letter-spacing: -0.03em;
+        line-height: 1.25;
+      }
+
+      .node-modal-scroll {
+        overflow-y: auto;
+        min-height: 0;
+        max-height: 28vh;
+        padding-right: 4px;
+      }
+
+      .node-modal-desc {
+        margin: 0;
+        color: #475569;
+        font-family: Inter, "Segoe UI", sans-serif;
+        font-size: 15px;
+        font-weight: 400;
+        letter-spacing: -0.01em;
+        line-height: 1.7;
+      }
+
+      .node-modal-actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 10px;
+        padding-top: 8px;
+        border-top: 1px solid #eef2f7;
+      }
+
+      .node-modal-secondary,
+      .node-modal-primary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 40px;
+        padding: 0 16px;
+        border-radius: 999px;
+        border: 0;
+        font-family: Inter, "Segoe UI", sans-serif;
+        font-size: 13px;
+        font-weight: 500;
+        letter-spacing: -0.01em;
+        text-decoration: none;
+        cursor: pointer;
+        transition:
+          background-color 160ms ease,
+          color 160ms ease,
+          border-color 160ms ease;
+      }
+
+      .node-modal-secondary {
+        border: 1px solid #e2e8f0;
+        background: #fff;
+        color: #334155;
+      }
+
+      .node-modal-secondary:hover {
+        border-color: #cbd5e1;
+        background: #f8fafc;
+      }
+
+      .node-modal-primary {
+        background: #0f172a;
+        color: #fff;
+      }
+
+      .node-modal-primary:hover {
+        background: #020617;
+      }
+
+      @media (max-width: 900px) {
+        .detail-panel {
+          top: auto;
+          left: 0;
+          width: 100%;
+          height: min(62vh, 720px);
+          border-left: 0;
+          border-top: 1px solid #e8eef5;
+          box-shadow: 0 -18px 40px -28px rgba(15, 23, 42, 0.28);
+          transform: translate3d(0, 104%, 0);
+        }
+
+        .posts-workspace.is-split .detail-panel {
+          transform: translate3d(0, 0, 0);
+        }
+
+      }
+    </style>
   </head>
-  <body class="posts-page">
+  <body class="posts-constellation-page">
     <header class="top">
       <a class="brand" href="/">Santamonica Boy</a>
       <nav class="menu" aria-label="Page">
+        <a href="/">Home</a>
         <a href="/posts" aria-current="page">Posts</a>
       </nav>
+      <div class="account">
+        <span class="account-email" data-auth-status hidden></span>
+        <a
+          class="account-action"
+          href="https://santamonica-admin--santamonica-boy.asia-east1.hosted.app"
+          data-admin
+          hidden
+          >Admin</a
+        >
+        <button class="account-action" type="button" data-auth data-mode="in">Sign in</button>
+      </div>
     </header>
 
-    <main class="posts-shell">
-      <header class="posts-intro">
-        <h1>Posts</h1>
-        <p>Published notes and Recommended GitHub picks.</p>
-      </header>
+    <div class="posts-workspace" data-workspace>
+      <div class="constellation-stage">
+        <div class="constellation-controls">
+          <button
+            type="button"
+            data-reset-view
+            class="px-3.5 py-1.5 rounded-lg glass-panel text-xs font-mono-custom text-slate-700 hover:text-slate-900 hover:bg-white/80 transition-all shadow-lg"
+          >
+            Reset View
+          </button>
+        </div>
 
-      <div class="posts-filters" data-filters hidden></div>
-      <p class="posts-status" data-status>Loading…</p>
-      <ul class="posts-list" data-list></ul>
-    </main>
+        <div id="boot-status">Loading constellation…</div>
+        <canvas id="constellationCanvas"></canvas>
+        <p class="constellation-hint">
+          Nodes: <span id="node-count">0</span> · Click node to inspect
+        </p>
+      </div>
 
-    <script type="module" src="/posts-list.js?v=3"></script>
+      <aside class="detail-panel" data-detail-panel aria-hidden="true">
+        <div class="detail-panel-inner">
+          <div class="detail-panel-toolbar">
+            <button type="button" data-close-detail>← Back to map</button>
+            <span class="font-mono-custom text-[11px] text-slate-400">Detail</span>
+          </div>
+          <div class="detail-panel-scroll">
+            <p class="detail-panel-status" data-detail-status>Loading…</p>
+            <article data-detail-article hidden>
+              <div class="detail-panel-meta">
+                <span class="detail-panel-chip" data-detail-category></span>
+                <span class="detail-panel-date" data-detail-date></span>
+              </div>
+              <h1 class="detail-panel-title" data-detail-title></h1>
+              <div class="detail-share" aria-label="공유하기">
+                <span class="detail-share-label">Share</span>
+                <div class="share-icons">
+                  <button
+                    type="button"
+                    class="share-icon is-kakao"
+                    data-share-kakao
+                    title="카카오톡 공유"
+                    aria-label="카카오톡 공유"
+                  >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path
+                        fill="currentColor"
+                        d="M12 4C7.03 4 3 7.14 3 11c0 2.45 1.6 4.6 4.02 5.86l-.9 3.3a.4.4 0 0 0 .6.44l3.86-2.56c.46.06.94.1 1.42.1 4.97 0 9-3.14 9-7s-4.03-7-9-7z"
+                      />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    class="share-icon"
+                    data-share-copy
+                    title="링크 복사"
+                    aria-label="링크 복사"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path
+                        d="M10 13a5 5 0 0 0 7.07 0l1.42-1.42a5 5 0 0 0-7.07-7.07L10 5.93"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                      />
+                      <path
+                        d="M14 11a5 5 0 0 0-7.07 0L5.5 12.43a5 5 0 0 0 7.07 7.07L14 18.07"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <img class="detail-panel-hero" data-detail-thumb hidden alt="" />
+              <div class="post-prose" data-detail-body></div>
+              <div class="detail-share detail-share-footer" aria-label="공유하기">
+                <span class="detail-share-label">Share</span>
+                <div class="share-icons">
+                  <button
+                    type="button"
+                    class="share-icon is-kakao"
+                    data-share-kakao
+                    title="카카오톡 공유"
+                    aria-label="카카오톡 공유"
+                  >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path
+                        fill="currentColor"
+                        d="M12 4C7.03 4 3 7.14 3 11c0 2.45 1.6 4.6 4.02 5.86l-.9 3.3a.4.4 0 0 0 .6.44l3.86-2.56c.46.06.94.1 1.42.1 4.97 0 9-3.14 9-7s-4.03-7-9-7z"
+                      />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    class="share-icon"
+                    data-share-copy
+                    title="링크 복사"
+                    aria-label="링크 복사"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path
+                        d="M10 13a5 5 0 0 0 7.07 0l1.42-1.42a5 5 0 0 0-7.07-7.07L10 5.93"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                      />
+                      <path
+                        d="M14 11a5 5 0 0 0-7.07 0L5.5 12.43a5 5 0 0 0 7.07 7.07L14 18.07"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </article>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <footer class="site-footer is-copy-only">
+      <p class="site-footer-copy">
+        <span>Copyright © 2026 Santamonica Boy.</span> <span>All rights reserved.</span>
+      </p>
+    </footer>
+
+    <div
+      id="node-modal"
+      class="fixed inset-0 z-30 flex items-center justify-center p-4 bg-slate-900/25 backdrop-blur-sm hidden opacity-0 transition-all duration-300 pointer-events-none"
+    >
+      <div
+        class="node-modal-card w-full max-w-xl max-h-[85vh] flex flex-col overflow-hidden transform scale-95 transition-transform duration-300 pointer-events-auto"
+        id="modal-content"
+      >
+        <div class="node-modal-media" data-modal-media hidden>
+          <img id="modal-thumb" alt="" />
+        </div>
+        <div class="node-modal-body">
+          <div class="node-modal-meta">
+            <span id="modal-category" class="node-modal-chip"></span>
+            <span id="modal-date" class="node-modal-date"></span>
+          </div>
+          <h2 id="modal-title" class="node-modal-title"></h2>
+          <div class="node-modal-scroll">
+            <p id="modal-desc" class="node-modal-desc"></p>
+          </div>
+          <div class="node-modal-share" aria-label="공유하기">
+            <span class="detail-share-label">Share</span>
+            <div class="share-icons">
+              <button
+                type="button"
+                class="share-icon is-kakao"
+                data-share-kakao
+                title="카카오톡 공유"
+                aria-label="카카오톡 공유"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path
+                    fill="currentColor"
+                    d="M12 4C7.03 4 3 7.14 3 11c0 2.45 1.6 4.6 4.02 5.86l-.9 3.3a.4.4 0 0 0 .6.44l3.86-2.56c.46.06.94.1 1.42.1 4.97 0 9-3.14 9-7s-4.03-7-9-7z"
+                  />
+                </svg>
+              </button>
+              <button
+                type="button"
+                class="share-icon"
+                data-share-copy
+                title="링크 복사"
+                aria-label="링크 복사"
+              >
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path
+                    d="M10 13a5 5 0 0 0 7.07 0l1.42-1.42a5 5 0 0 0-7.07-7.07L10 5.93"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                  />
+                  <path
+                    d="M14 11a5 5 0 0 0-7.07 0L5.5 12.43a5 5 0 0 0 7.07 7.07L14 18.07"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div class="node-modal-actions">
+            <button type="button" data-close-modal class="node-modal-secondary">Close</button>
+            <button type="button" id="modal-open" class="node-modal-primary">Read post</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="/app.js"></script>
+    <script type="module" src="/posts-constellation.js?v=10"></script>
     <script src="/sample-nav.js" defer></script>
   </body>
 </html>

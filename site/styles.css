@@ -1840,10 +1840,23 @@ html.swarm-live .contact-panel {
   }
 }
 
-/* Public Posts */
+/* Public Posts (list/detail) */
 .posts-page .top {
   background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(10px);
+}
+
+.posts-constellation-page {
+  height: 100vh;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.posts-constellation-page .posts-workspace {
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .posts-shell,

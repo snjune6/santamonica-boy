@@ -1,4 +1,4 @@
-import { getPublishedPostBySlug, renderMarkdown } from "./posts.js?v=3";
+import { getPublishedPostBySlug, renderMarkdown } from "./posts.js?v=4";
 
 const status = document.querySelector("[data-status]");
 const article = document.querySelector("[data-article]");

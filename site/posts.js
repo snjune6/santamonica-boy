@@ -129,6 +129,23 @@ function sortPosts(posts) {
   return posts.sort((a, b) => String(b.publishedAt || "").localeCompare(String(a.publishedAt || "")));
 }
 
+function excerptFromBody(body, limit = 220) {
+  const plain = String(body || "")
+    .replace(/```[\s\S]*?```/g, " ")
+    .replace(/!\[[^\]]*\]\([^)]+\)/g, " ")
+    .replace(/\[[^\]]*\]\([^)]+\)/g, "$1")
+    .replace(/[#>*_`~-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (plain.length <= limit) return plain;
+  return `${plain.slice(0, limit).trim()}…`;
+}
+
+function displayDate(value) {
+  const label = dateLabel(value);
+  return label ? label.replaceAll("-", ".") : "";
+}
+
 export async function listPublishedPosts(categoryId) {
   const snap = await getDocs(query(collection(db, "posts"), where("status", "==", "published")));
   let posts = snap.docs.map((item) => {
@@ -140,6 +157,8 @@ export async function listPublishedPosts(categoryId) {
       categoryId: data.categoryId || "",
       categoryName: data.categoryName || "",
       publishedAt: dateLabel(data.publishedAt),
+      date: displayDate(data.publishedAt),
+      description: excerptFromBody(data.body),
       thumbnail: data.thumbnail || null,
     };
   });
