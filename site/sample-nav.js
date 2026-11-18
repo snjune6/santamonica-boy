@@ -1,16 +1,43 @@
 (function setupSampleNav() {
-  if (document.querySelector("[data-sample-nav]")) return;
-
   // /sample Design 메뉴 임시 숨김 (다시 켤 때 true)
   const SHOW_DESIGN_MENU = false;
 
-  const path = window.location.pathname.replace(/\/$/, "") || "/";
   const designChildren = [
     { href: "/sample/main", label: "메인" },
     { href: "/sample/subpage", label: "서브페이지" },
     { href: "/sample/board", label: "게시판" },
     { href: "/sample/etc", label: "기타" },
   ];
+
+  function currentPath() {
+    return window.location.pathname.replace(/\/$/, "") || "/";
+  }
+
+  function refreshCurrent() {
+    const path = currentPath();
+    const root = document.querySelector("[data-sample-nav]");
+    if (!root) return;
+    root.querySelectorAll("a[aria-current]").forEach((link) => link.removeAttribute("aria-current"));
+    root.querySelectorAll("a[href]").forEach((link) => {
+      const href = link.getAttribute("href")?.replace(/\/$/, "") || "/";
+      if (href === path || (href === "/posts" && path.startsWith("/posts/"))) {
+        link.setAttribute("aria-current", "page");
+      }
+    });
+    const designToggle = root.querySelector(".sample-float-parent");
+    if (designToggle) {
+      designToggle.classList.toggle("is-parent-active", path === "/sample" || path.startsWith("/sample/"));
+    }
+  }
+
+  window.__refreshSampleNav = refreshCurrent;
+
+  if (document.querySelector("[data-sample-nav]")) {
+    refreshCurrent();
+    return;
+  }
+
+  const path = currentPath();
   const isDesignPath = path === "/sample" || path.startsWith("/sample/");
 
   const root = document.createElement("div");

@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -90,6 +90,7 @@
     </script>
   </head>
   <body>
+    <div id="swup" class="transition-fade">
     <header class="top">
       <a class="brand" href="/">Santamonica Boy</a>
       <div class="account">
@@ -320,7 +321,7 @@
       <div class="showcase-intro">
         <div class="showcase-intro-top">
           <h2 id="showcase-title">Projects in motion</h2>
-          <button class="showcase-view-all" type="button" data-showcase-open>
+          <button class="showcase-view-all" type="button" data-showcase-open data-swarm-ignore>
             View all
             <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false">
               <path d="M6 3.5 10.5 8 6 12.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
@@ -564,12 +565,13 @@
         />
       </svg>
     </button>
+    </div>
 
-    <script type="module" src="app.js"></script>
-    <script src="sample-nav.js" defer></script>
+    <script type="module" src="/swup-app.js?v=5"></script>
+    <script src="/sample-nav.js" defer></script>
     <!-- Instagram-style Swarm Rebuild: auto play + Rebuild button (Alt+Shift+S). Credit in swarm-cursors.js -->
     <script
-      src="swarm-cursors.js"
+      src="/swarm-cursors.js"
       defer
       data-trigger="auto"
       data-label="Rebuild"

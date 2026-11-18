@@ -12,6 +12,7 @@ Santamonica Boy 대표 홈페이지입니다. 정적 사이트이고 Firebase Ho
 ├── site/              # 공개 파일 (Hosting public 폴더)
 │   ├── index.html
 │   ├── styles.css
+│   ├── swup-app.js    # 페이지 전환 (swup)
 │   ├── app.js
 │   ├── assets/        # 이미지, 아이콘
 │   └── ...

@@ -6,28 +6,32 @@ import {
   renderMarkdown,
 } from "./posts.js?v=4";
 
-const canvas = document.getElementById("constellationCanvas");
-const ctx = canvas.getContext("2d");
-const bootStatus = document.getElementById("boot-status");
-const nodeCountEl = document.getElementById("node-count");
-const stage = document.querySelector(".constellation-stage") || canvas.parentElement;
-const workspace = document.querySelector("[data-workspace]");
-const detailPanel = document.querySelector("[data-detail-panel]");
-const detailStatus = document.querySelector("[data-detail-status]");
-const detailArticle = document.querySelector("[data-detail-article]");
-const detailCategory = document.querySelector("[data-detail-category]");
-const detailDate = document.querySelector("[data-detail-date]");
-const detailTitle = document.querySelector("[data-detail-title]");
-const detailThumb = document.querySelector("[data-detail-thumb]");
-const detailBody = document.querySelector("[data-detail-body]");
+let canvas = null;
+let ctx = null;
+let bootStatus = null;
+let nodeCountEl = null;
+let stage = null;
+let workspace = null;
+let detailPanel = null;
+let detailStatus = null;
+let detailArticle = null;
+let detailCategory = null;
+let detailDate = null;
+let detailTitle = null;
+let detailThumb = null;
+let detailBody = null;
 
 let width = 0;
 let height = 0;
 let dpr = 1;
 let detailRequestId = 0;
 let activeDetailSlug = "";
+let rafId = 0;
+let running = false;
+let constellationAbort = null;
 
 function resizeCanvas() {
+  if (!canvas || !ctx || !stage) return;
   const rect = stage.getBoundingClientRect();
   const nextW = Math.max(1, Math.floor(rect.width));
   const nextH = Math.max(1, Math.floor(rect.height));
@@ -44,8 +48,6 @@ function resizeCanvas() {
   // Draw in CSS pixels while backing store matches device pixels.
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
-
-resizeCanvas();
 
 // Temporary threshold for testing the "더보기" node. Raise again after QA.
 const PAGE_SIZE = 1;
@@ -106,12 +108,14 @@ function buildBaseNodes() {
     id: "menu-home",
     title: "Home",
     x: -menuGap,
-    y: rootY,
+    y: rootY + 18,
     targetX: -menuGap,
     targetY: rootY,
     isMenuNode: true,
     href: "/",
-    alpha: 1,
+    alpha: 0,
+    hoverAmount: 0,
+    displayRadius: 10,
   };
 
   const rootX = menuGap;
@@ -119,13 +123,15 @@ function buildBaseNodes() {
     id: "root-posts",
     title: "Posts",
     x: rootX,
-    y: rootY,
+    y: rootY + 18,
     targetX: rootX,
     targetY: rootY,
     isMenuNode: true,
     isPostsRoot: true,
     isRootNode: true,
-    alpha: 1,
+    alpha: 0,
+    hoverAmount: 0,
+    displayRadius: 10,
   };
 
   const categoryNodes = categories.map((category, index) => {
@@ -141,7 +147,7 @@ function buildBaseNodes() {
       postCount,
       visibleLimit: PAGE_SIZE,
       x: rootX + offsetX,
-      y: rootY + offsetY,
+      y: rootY + offsetY + 24,
       targetX: rootX + offsetX,
       targetY: rootY + offsetY,
       offsetX,
@@ -149,7 +155,9 @@ function buildBaseNodes() {
       parentId: "root-posts",
       isCategoryNode: true,
       expanded: false,
-      alpha: 1,
+      alpha: 0,
+      hoverAmount: 0,
+      displayRadius: 8,
       anchorIndex: index,
     };
   });
@@ -652,76 +660,35 @@ function onPointerUp(event) {
   if (shouldActivate) activateNode(clicked);
 }
 
-window.addEventListener("resize", () => {
-  resizeCanvas();
-});
-
-canvas.addEventListener("pointerdown", onPointerDown);
-window.addEventListener("pointermove", onPointerMove);
-window.addEventListener("pointerup", onPointerUp);
-window.addEventListener("pointercancel", onPointerUp);
-
-canvas.addEventListener(
-  "touchstart",
-  (event) => {
-    if (event.touches.length === 2) {
-      event.preventDefault();
-      draggedNode = null;
-      isDragging = false;
-      pinchStartDistance = pinchDistance(event.touches);
-      pinchStartZoom = targetZoom;
-    }
-  },
-  { passive: false },
-);
-
-canvas.addEventListener(
-  "touchmove",
-  (event) => {
-    if (event.touches.length === 2 && pinchStartDistance > 0) {
-      event.preventDefault();
-      const scale = pinchDistance(event.touches) / pinchStartDistance;
-      targetZoom = Math.min(2.2, Math.max(0.5, pinchStartZoom * scale));
-    }
-  },
-  { passive: false },
-);
-
-canvas.addEventListener(
-  "touchend",
-  (event) => {
-    if (event.touches.length < 2) pinchStartDistance = 0;
-  },
-  { passive: true },
-);
-
-canvas.addEventListener(
-  "wheel",
-  (event) => {
+function onTouchStart(event) {
+  if (event.touches.length === 2) {
     event.preventDefault();
-    const next = targetZoom * (event.deltaY > 0 ? 0.92 : 1.08);
-    targetZoom = Math.min(2.2, Math.max(0.5, next));
-  },
-  { passive: false },
-);
+    draggedNode = null;
+    isDragging = false;
+    pinchStartDistance = pinchDistance(event.touches);
+    pinchStartZoom = targetZoom;
+  }
+}
 
-document.querySelector("[data-reset-view]")?.addEventListener("click", resetView);
-document.querySelector("[data-close-modal]")?.addEventListener("click", closeModal);
-document.querySelector("[data-close-detail]")?.addEventListener("click", closeDetailPanel);
-document.querySelectorAll("[data-share-copy]").forEach((button) => {
-  button.addEventListener("click", () => copyShareLink(button));
-});
-document.querySelectorAll("[data-share-kakao]").forEach((button) => {
-  button.addEventListener("click", () => shareToKakao(button));
-});
-document.getElementById("modal-open")?.addEventListener("click", () => {
-  const slug = document.getElementById("modal-open")?.dataset.slug;
-  if (slug) openDetailPanel(slug);
-});
-document.getElementById("node-modal")?.addEventListener("click", (event) => {
-  if (event.target.id === "node-modal") closeModal();
-});
-document.addEventListener("keydown", (event) => {
+function onTouchMove(event) {
+  if (event.touches.length === 2 && pinchStartDistance > 0) {
+    event.preventDefault();
+    const scale = pinchDistance(event.touches) / pinchStartDistance;
+    targetZoom = Math.min(2.2, Math.max(0.5, pinchStartZoom * scale));
+  }
+}
+
+function onTouchEnd(event) {
+  if (event.touches.length < 2) pinchStartDistance = 0;
+}
+
+function onWheel(event) {
+  event.preventDefault();
+  const next = targetZoom * (event.deltaY > 0 ? 0.92 : 1.08);
+  targetZoom = Math.min(2.2, Math.max(0.5, next));
+}
+
+function onEscapeKey(event) {
   if (event.key !== "Escape") return;
   const modal = document.getElementById("node-modal");
   if (modal && !modal.classList.contains("hidden")) {
@@ -729,12 +696,103 @@ document.addEventListener("keydown", (event) => {
     return;
   }
   if (workspace?.classList.contains("is-split")) closeDetailPanel();
-});
+}
+
+function onModalBackdrop(event) {
+  if (event.target.id === "node-modal") closeModal();
+}
+
+function onModalOpenClick() {
+  const slug = document.getElementById("modal-open")?.dataset.slug;
+  if (slug) openDetailPanel(slug);
+}
+
+function bindConstellationEvents(signal) {
+  window.addEventListener("resize", resizeCanvas, { signal });
+  canvas.addEventListener("pointerdown", onPointerDown, { signal });
+  window.addEventListener("pointermove", onPointerMove, { signal });
+  window.addEventListener("pointerup", onPointerUp, { signal });
+  window.addEventListener("pointercancel", onPointerUp, { signal });
+  canvas.addEventListener("touchstart", onTouchStart, { passive: false, signal });
+  canvas.addEventListener("touchmove", onTouchMove, { passive: false, signal });
+  canvas.addEventListener("touchend", onTouchEnd, { passive: true, signal });
+  canvas.addEventListener("wheel", onWheel, { passive: false, signal });
+  document.querySelector("[data-reset-view]")?.addEventListener("click", resetView, { signal });
+  document.querySelector("[data-close-modal]")?.addEventListener("click", closeModal, { signal });
+  document.querySelector("[data-close-detail]")?.addEventListener("click", closeDetailPanel, {
+    signal,
+  });
+  document.querySelectorAll("[data-share-copy]").forEach((button) => {
+    button.addEventListener("click", () => copyShareLink(button), { signal });
+  });
+  document.querySelectorAll("[data-share-kakao]").forEach((button) => {
+    button.addEventListener("click", () => shareToKakao(button), { signal });
+  });
+  document.getElementById("modal-open")?.addEventListener("click", onModalOpenClick, { signal });
+  document.getElementById("node-modal")?.addEventListener("click", onModalBackdrop, { signal });
+  document.addEventListener("keydown", onEscapeKey, { signal });
+}
+
+function lerp(from, to, amount) {
+  return from + (to - from) * amount;
+}
+
+function baseRadius(node) {
+  if (node.isMenuNode || node.isRootNode) return 14;
+  if (node.isCategoryNode) return 12;
+  if (node.isMoreNode) return 8;
+  return 7;
+}
+
+function hoverRadius(node) {
+  if (node.isMenuNode || node.isRootNode) return 18;
+  if (node.isCategoryNode) return 16;
+  if (node.isMoreNode) return 11;
+  return 12;
+}
+
+function nodeFill(node, hoverAmount) {
+  if (node.isMenuNode || node.isRootNode) return "#0f172a";
+  if (node.isCategoryNode) return "#0284c7";
+  if (node.isMoreNode) return "#38bdf8";
+  return hoverAmount > 0.45 ? "#0284c7" : "#0f172a";
+}
+
+function drawSoftDot(x, y, radius, color, glowStrength) {
+  if (glowStrength > 0.01) {
+    const glow = ctx.createRadialGradient(x, y, radius * 0.2, x, y, radius + 16);
+    glow.addColorStop(0, "rgba(2, 132, 199, 0.22)");
+    glow.addColorStop(0.45, "rgba(2, 132, 199, 0.1)");
+    glow.addColorStop(1, "rgba(2, 132, 199, 0)");
+    ctx.beginPath();
+    ctx.fillStyle = glow;
+    ctx.arc(x, y, radius + 16 * glowStrength, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  const body = ctx.createRadialGradient(
+    x - radius * 0.28,
+    y - radius * 0.32,
+    radius * 0.08,
+    x,
+    y,
+    radius,
+  );
+  body.addColorStop(0, "#ffffff");
+  body.addColorStop(0.22, color);
+  body.addColorStop(1, color);
+  ctx.beginPath();
+  ctx.fillStyle = body;
+  ctx.arc(x, y, radius, 0, Math.PI * 2);
+  ctx.fill();
+}
 
 function animate() {
-  cameraX += (targetCameraX - cameraX) * 0.1;
-  cameraY += (targetCameraY - cameraY) * 0.1;
-  zoom += (targetZoom - zoom) * 0.1;
+  if (!running || !ctx) return;
+  const now = performance.now();
+  cameraX = lerp(cameraX, targetCameraX, 0.055);
+  cameraY = lerp(cameraY, targetCameraY, 0.055);
+  zoom = lerp(zoom, targetZoom, 0.06);
 
   ctx.clearRect(0, 0, width, height);
   ctx.save();
@@ -744,7 +802,7 @@ function animate() {
 
   const root = nodes.find((node) => node.isPostsRoot || node.isRootNode);
 
-  nodes.forEach((node) => {
+  nodes.forEach((node, index) => {
     if (node.isCategoryNode && root) {
       if (draggedNode === node) {
         node.offsetX = node.x - root.x;
@@ -764,125 +822,186 @@ function animate() {
     }
 
     if (draggedNode !== node) {
-      node.x += (node.targetX - node.x) * 0.12;
-      node.y += (node.targetY - node.y) * 0.12;
+      node.x = lerp(node.x, node.targetX, 0.07);
+      node.y = lerp(node.y, node.targetY, 0.07);
     } else {
       node.targetX = node.x;
       node.targetY = node.y;
     }
+
     if (node.alpha === undefined) node.alpha = 1;
-    if (node.isClosing) node.alpha -= 0.1;
-    else if (node.alpha < 1) node.alpha += 0.1;
+    if (node.isClosing) node.alpha = Math.max(0, node.alpha - 0.035);
+    else if (node.alpha < 1) {
+      if (node.bornAt == null) node.bornAt = now;
+      const delay = (node.anchorIndex ?? (node.isMenuNode ? 0 : 1)) * 70;
+      if (now - node.bornAt >= delay) node.alpha = Math.min(1, node.alpha + 0.04);
+    }
+
+    const wantHover = hoveredNode === node ? 1 : 0;
+    node.hoverAmount = lerp(node.hoverAmount ?? 0, wantHover, 0.14);
+    const targetR = lerp(baseRadius(node), hoverRadius(node), node.hoverAmount);
+    node.displayRadius = lerp(node.displayRadius ?? targetR, targetR, 0.16);
+
+    // Soft idle drift so resting nodes feel alive, not frozen.
+    if (draggedNode !== node && !node.isClosing) {
+      const phase = (node.driftPhase ?? index * 0.85) + now * 0.0007;
+      node.driftPhase = node.driftPhase ?? index * 0.85;
+      node.renderX = node.x + Math.sin(phase) * (0.55 + node.hoverAmount * 0.35);
+      node.renderY = node.y + Math.cos(phase * 0.9) * (0.45 + node.hoverAmount * 0.25);
+    } else {
+      node.renderX = node.x;
+      node.renderY = node.y;
+    }
   });
 
-  nodes = nodes.filter((node) => !node.isClosing || node.alpha > 0.05);
+  nodes = nodes.filter((node) => !node.isClosing || node.alpha > 0.04);
 
-  ctx.lineWidth = 1;
-  ctx.strokeStyle = "rgba(2, 132, 199, 0.25)";
   nodes.forEach((child) => {
-    if (!child.parentId || child.alpha <= 0.05) return;
+    if (!child.parentId || child.alpha <= 0.04) return;
     const parent = nodes.find((item) => item.id === child.parentId);
     if (!parent) return;
+    const x1 = parent.renderX ?? parent.x;
+    const y1 = parent.renderY ?? parent.y;
+    const x2 = child.renderX ?? child.x;
+    const y2 = child.renderY ?? child.y;
+    const mx = (x1 + x2) / 2;
+    const my = (y1 + y2) / 2 + (x2 >= x1 ? -10 : 10);
     ctx.save();
-    ctx.globalAlpha = Math.min(parent.alpha, child.alpha);
+    ctx.globalAlpha = Math.min(parent.alpha, child.alpha) * 0.9;
+    ctx.lineWidth = 1.25;
+    ctx.strokeStyle = "rgba(2, 132, 199, 0.22)";
+    ctx.lineCap = "round";
     ctx.beginPath();
-    ctx.moveTo(parent.x, parent.y);
-    ctx.lineTo(child.x, child.y);
+    ctx.moveTo(x1, y1);
+    ctx.quadraticCurveTo(mx, my, x2, y2);
     ctx.stroke();
     ctx.restore();
   });
 
   nodes.forEach((node) => {
     if (node.alpha <= 0) return;
+    const x = node.renderX ?? node.x;
+    const y = node.renderY ?? node.y;
+    const radius = node.displayRadius ?? baseRadius(node);
+    const hoverAmount = node.hoverAmount ?? 0;
+
     ctx.save();
     ctx.globalAlpha = node.alpha;
+    ctx.textBaseline = "middle";
 
-    const isHovered = hoveredNode === node;
-    const isMenu = node.isMenuNode || node.isRootNode;
-    const radius = isHovered
-      ? isMenu
-        ? 18
-        : node.isCategoryNode
-          ? 16
-          : node.isMoreNode
-            ? 11
-            : 12
-      : isMenu
-        ? 14
-        : node.isCategoryNode
-          ? 12
-          : node.isMoreNode
-            ? 8
-            : 7;
-
-    if (isHovered) {
-      ctx.beginPath();
-      ctx.arc(node.x, node.y, radius + 12, 0, Math.PI * 2);
-      ctx.fillStyle = "rgba(2, 132, 199, 0.15)";
-      ctx.fill();
-    }
-
-    ctx.beginPath();
-    ctx.arc(node.x, node.y, radius, 0, Math.PI * 2);
-    ctx.fillStyle = isMenu
-      ? "#0f172a"
-      : node.isCategoryNode
-        ? "#0284c7"
-        : node.isMoreNode
-          ? "#38bdf8"
-          : isHovered
-            ? "#0284c7"
-            : "#0f172a";
-    ctx.fill();
+    drawSoftDot(x, y, radius, nodeFill(node, hoverAmount), hoverAmount);
 
     if (node.isMoreNode) {
       ctx.beginPath();
-      ctx.arc(node.x, node.y, radius + 3, 0, Math.PI * 2);
-      ctx.strokeStyle = "rgba(2, 132, 199, 0.45)";
-      ctx.lineWidth = 1;
+      ctx.arc(x, y, radius + 3.5, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(2, 132, 199, ${0.28 + hoverAmount * 0.25})`;
+      ctx.lineWidth = 1.2;
       ctx.stroke();
     }
 
-    if (isMenu) {
+    const labelX = x + 18 + hoverAmount * 2;
+    if (node.isMenuNode || node.isRootNode) {
       ctx.font = 'bold 14px "Space Grotesk", sans-serif';
       ctx.fillStyle = "#0f172a";
-      ctx.fillText(node.title, node.x + 20, node.y + 5);
+      ctx.fillText(node.title, labelX, y);
     } else if (node.isCategoryNode) {
       const label = `${node.category} [${node.postCount ?? 0}]`;
       ctx.font = 'bold 13px "Space Grotesk", sans-serif';
       ctx.fillStyle = "#0f172a";
-      ctx.fillText(label, node.x + 18, node.y + 4);
+      ctx.fillText(label, labelX, y);
     } else if (node.isMoreNode) {
       ctx.font = '12px "Space Grotesk", sans-serif';
       ctx.fillStyle = "#0284c7";
-      ctx.fillText(node.title, node.x + 18, node.y + 4);
+      ctx.fillText(node.title, labelX, y);
     } else {
       ctx.font = '13px "Space Grotesk", sans-serif';
       ctx.fillStyle = "#0f172a";
-      ctx.fillText(node.title, node.x + 18, node.y - 2);
+      ctx.fillText(node.title, labelX, y - 7);
       ctx.font = '10px "JetBrains Mono", monospace';
       ctx.fillStyle = "#0284c7";
-      ctx.fillText(node.date || "", node.x + 18, node.y + 14);
+      ctx.fillText(node.date || "", labelX, y + 9);
     }
 
     ctx.restore();
   });
 
   ctx.restore();
-  requestAnimationFrame(animate);
+  rafId = requestAnimationFrame(animate);
 }
 
-try {
-  const [cats, posts] = await Promise.all([listVisibleCategories(), listPublishedPosts()]);
-  categories = cats;
-  allPosts = posts;
-  const z = defaultZoom();
-  zoom = z;
-  targetZoom = z;
-  buildBaseNodes();
-  if (bootStatus) bootStatus.remove();
-  animate();
-} catch (error) {
-  console.error(error);
-  if (bootStatus) bootStatus.textContent = "Couldn't load constellation.";
+export async function mountConstellation() {
+  constellationAbort?.abort();
+  if (rafId) cancelAnimationFrame(rafId);
+  running = false;
+
+  canvas = document.getElementById("constellationCanvas");
+  if (!canvas) return () => {};
+
+  ctx = canvas.getContext("2d");
+  bootStatus = document.getElementById("boot-status");
+  nodeCountEl = document.getElementById("node-count");
+  stage = document.querySelector(".constellation-stage") || canvas.parentElement;
+  workspace = document.querySelector("[data-workspace]");
+  detailPanel = document.querySelector("[data-detail-panel]");
+  detailStatus = document.querySelector("[data-detail-status]");
+  detailArticle = document.querySelector("[data-detail-article]");
+  detailCategory = document.querySelector("[data-detail-category]");
+  detailDate = document.querySelector("[data-detail-date]");
+  detailTitle = document.querySelector("[data-detail-title]");
+  detailThumb = document.querySelector("[data-detail-thumb]");
+  detailBody = document.querySelector("[data-detail-body]");
+
+  width = 0;
+  height = 0;
+  dpr = 1;
+  detailRequestId = 0;
+  activeDetailSlug = "";
+  allPosts = [];
+  categories = [];
+  nodes = [];
+  cameraX = 0;
+  cameraY = 0;
+  targetCameraX = 0;
+  targetCameraY = 0;
+  zoom = 1;
+  targetZoom = 1;
+  isDragging = false;
+  hoveredNode = null;
+  draggedNode = null;
+  hasMoved = false;
+  activePointerId = null;
+  pinchStartDistance = 0;
+
+  constellationAbort = new AbortController();
+  const { signal } = constellationAbort;
+  resizeCanvas();
+  bindConstellationEvents(signal);
+
+  try {
+    const [cats, posts] = await Promise.all([listVisibleCategories(), listPublishedPosts()]);
+    if (signal.aborted) return () => {};
+    categories = cats;
+    allPosts = posts;
+    const z = defaultZoom();
+    zoom = z;
+    targetZoom = z;
+    buildBaseNodes();
+    if (bootStatus) bootStatus.remove();
+    running = true;
+    rafId = requestAnimationFrame(animate);
+  } catch (error) {
+    console.error(error);
+    if (bootStatus) bootStatus.textContent = "Couldn't load constellation.";
+  }
+
+  return () => {
+    running = false;
+    if (rafId) cancelAnimationFrame(rafId);
+    rafId = 0;
+    constellationAbort?.abort();
+    constellationAbort = null;
+    closeDetailPanel?.();
+    canvas = null;
+    ctx = null;
+  };
 }

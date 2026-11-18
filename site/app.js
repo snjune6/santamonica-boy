@@ -64,42 +64,60 @@ const db = getFirestore(app);
 const googleProvider = new GoogleAuthProvider();
 
 const ADMIN_PAGE_ROLE = "관리자";
-const downloadButton = document.querySelector("[data-download]");
-const authButton = document.querySelector("[data-auth]");
-const authStatus = document.querySelector("[data-auth-status]");
-const adminLink = document.querySelector("[data-admin]");
-const contactForm = document.querySelector("[data-contact-form]");
-const contactStatus = document.querySelector("[data-contact-status]");
-const revealPanels = document.querySelectorAll("[data-reveal]");
 
 let downloadUrl = null;
-let clickBound = false;
+let authListenerBound = false;
+let showcaseDelegationBound = false;
+let sharedAbort = null;
+let homeAbort = null;
+
+function downloadButton() {
+  return document.querySelector("[data-download]");
+}
+function authButton() {
+  return document.querySelector("[data-auth]");
+}
+function authStatus() {
+  return document.querySelector("[data-auth-status]");
+}
+function adminLink() {
+  return document.querySelector("[data-admin]");
+}
+function contactForm() {
+  return document.querySelector("[data-contact-form]");
+}
+function contactStatus() {
+  return document.querySelector("[data-contact-status]");
+}
 
 function setDownloadDisabled(message) {
-  if (!downloadButton) return;
-  downloadButton.disabled = true;
-  downloadButton.classList.remove("is-ready", "is-signin");
-  downloadButton.removeAttribute("aria-busy");
-  downloadButton.title = message;
+  const button = downloadButton();
+  if (!button) return;
+  button.disabled = true;
+  button.classList.remove("is-ready", "is-signin");
+  button.removeAttribute("aria-busy");
+  button.title = message;
 }
 
 function setDownloadNeedsSignIn() {
-  if (!downloadButton) return;
-  downloadButton.disabled = false;
-  downloadButton.classList.remove("is-ready");
-  downloadButton.classList.add("is-signin");
-  downloadButton.removeAttribute("aria-busy");
-  downloadButton.title = "Sign in to download AutoCation";
+  const button = downloadButton();
+  if (!button) return;
+  button.disabled = false;
+  button.classList.remove("is-ready");
+  button.classList.add("is-signin");
+  button.removeAttribute("aria-busy");
+  button.title = "Sign in to download AutoCation";
 }
 
 function setDownloadReady(url) {
-  if (!downloadButton) return;
+  const button = downloadButton();
+  if (!button) return;
   downloadUrl = url;
-  downloadButton.disabled = false;
-  downloadButton.classList.remove("is-signin");
-  downloadButton.classList.add("is-ready");
-  downloadButton.removeAttribute("aria-busy");
-  downloadButton.title = "Download AutoCation";
+  button.disabled = false;
+  button.classList.remove("is-signin");
+  button.classList.add("is-ready");
+  button.removeAttribute("aria-busy");
+  button.title = "Download AutoCation";
 }
 
 async function resolveInstallerUrl() {
@@ -142,11 +160,12 @@ async function handleDownloadClick() {
 }
 
 async function refreshDownloadState(user) {
-  if (!downloadButton) return;
+  const button = downloadButton();
+  if (!button) return;
 
   downloadUrl = null;
-  downloadButton.setAttribute("aria-busy", "true");
-  downloadButton.title = "Checking download…";
+  button.setAttribute("aria-busy", "true");
+  button.title = "Checking download…";
 
   if (!user) {
     setDownloadNeedsSignIn();
@@ -189,251 +208,331 @@ async function signedInUserIsAdmin(user) {
 }
 
 function setAdminLink(visible) {
-  if (!adminLink) return;
-  adminLink.hidden = !visible;
+  const link = adminLink();
+  if (!link) return;
+  link.hidden = !visible;
 }
 
 function updateAuthUi(user) {
-  if (!authButton || !authStatus) return;
+  const button = authButton();
+  const status = authStatus();
+  if (!button || !status) return;
 
   if (user) {
-    authStatus.textContent = user.email || "Signed in";
-    authStatus.hidden = false;
-    authButton.textContent = "Sign out";
-    authButton.dataset.mode = "out";
+    status.textContent = user.email || "Signed in";
+    status.hidden = false;
+    button.textContent = "Sign out";
+    button.dataset.mode = "out";
   } else {
-    authStatus.textContent = "";
-    authStatus.hidden = true;
-    authButton.textContent = "Sign in";
-    authButton.dataset.mode = "in";
+    status.textContent = "";
+    status.hidden = true;
+    button.textContent = "Sign in";
+    button.dataset.mode = "in";
     setAdminLink(false);
   }
 }
 
 function setContactMessage(message, state = "") {
-  if (!contactStatus) return;
-  contactStatus.textContent = message;
-  contactStatus.classList.remove("is-error", "is-success");
-  if (state) contactStatus.classList.add(state);
+  const status = contactStatus();
+  if (!status) return;
+  status.textContent = message;
+  status.classList.remove("is-error", "is-success");
+  if (state) status.classList.add(state);
 }
 
 function finishContactForm() {
-  contactForm.reset();
-  const defaultType = contactForm.querySelector('input[name="type"][value="New project"]');
+  const form = contactForm();
+  if (!form) return;
+  form.reset();
+  const defaultType = form.querySelector('input[name="type"][value="New project"]');
   if (defaultType) defaultType.checked = true;
   setContactMessage("Thanks. Your inquiry was received.", "is-success");
 }
 
-function setupContactForm() {
-  if (!contactForm) return;
-
-  contactForm.addEventListener("submit", async (event) => {
-    event.preventDefault();
-
-    const formData = new FormData(contactForm);
-    const type = String(formData.get("type") || "").trim();
-    const name = String(formData.get("name") || "").trim();
-    const email = String(formData.get("email") || "").trim();
-    const message = String(formData.get("message") || "").trim();
-    const honey = String(formData.get(HONEYPOT_FIELD) || "");
-
-    if (honey) {
-      finishContactForm();
-      return;
-    }
-
-    if (!INQUIRY_TYPES.has(type) || !name || !email || !message) {
-      setContactMessage("Please check your input.", "is-error");
-      return;
-    }
-
-    const submitButton = contactForm.querySelector('button[type="submit"]');
-    if (submitButton) submitButton.disabled = true;
-    setContactMessage("Sending…");
-
-    try {
-      await addDoc(collection(db, "inquiries"), {
-        type,
-        name,
-        email,
-        message,
-        createdAt: serverTimestamp(),
+function ensureAuthListener() {
+  if (authListenerBound) return;
+  authListenerBound = true;
+  onAuthStateChanged(auth, (user) => {
+    updateAuthUi(user);
+    refreshDownloadState(user);
+    setAdminLink(false);
+    if (!user) return;
+    rememberFirstLogin(user)
+      .catch((error) => {
+        console.warn("Could not save the first login:", error);
+      })
+      .then(() => signedInUserIsAdmin(user))
+      .then((isAdmin) => {
+        if (auth.currentUser?.uid === user.uid) setAdminLink(isAdmin);
+      })
+      .catch((error) => {
+        console.warn("Could not check the admin role:", error);
       });
-
-      const mailBody = new FormData();
-      mailBody.append("_subject", `[Santamonica Boy] ${type}`);
-      mailBody.append("_replyto", email);
-      mailBody.append("_template", "table");
-      mailBody.append("_captcha", "false");
-      mailBody.append("_honey", honey);
-      mailBody.append("_url", "https://santamonica-boy.web.app/");
-      mailBody.append("Type", type);
-      mailBody.append("Name", name);
-      mailBody.append("Email", email);
-      mailBody.append("Message", message);
-      mailBody.append(
-        "Summary",
-        [`[Type] ${type}`, `[Name] ${name}`, `[Email] ${email}`, "", message].join("\n")
-      );
-
-      const mailResponse = await fetch(`https://formsubmit.co/ajax/${CONTACT_FORM_ID}`, {
-        method: "POST",
-        headers: {
-          Accept: "application/json",
-        },
-        body: mailBody,
-      });
-
-      const mailResult = await mailResponse.json().catch(() => ({}));
-      if (String(mailResult.success) !== "true") {
-        throw new Error(
-          String(mailResult.message || `Mail delivery failed (${mailResponse.status})`)
-        );
-      }
-
-      finishContactForm();
-    } catch (error) {
-      console.error("Failed to submit inquiry:", error);
-      setContactMessage("Something went wrong. Please try again.", "is-error");
-    } finally {
-      if (submitButton) submitButton.disabled = false;
-    }
   });
 }
 
-function setupReveal() {
-  if (!revealPanels.length) return;
+function setShowcaseOpenState(open) {
+  document.querySelector("#showcase")?.classList.toggle("is-dialog-open", open);
+  document.documentElement.classList.toggle("is-scroll-locked", open);
+}
 
-  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    revealPanels.forEach((panel) => panel.classList.add("is-in"));
-    return;
-  }
+function openShowcaseDialog() {
+  const dialog = document.querySelector("[data-showcase-dialog]");
+  if (!dialog || typeof dialog.showModal !== "function") return false;
+  if (!dialog.open) dialog.showModal();
+  setShowcaseOpenState(true);
+  return true;
+}
 
-  const observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add("is-in");
-        }
-      });
-    },
-    { threshold: 0.22 }
+function closeShowcaseDialog() {
+  const dialog = document.querySelector("[data-showcase-dialog]");
+  if (!dialog) return;
+  if (dialog.open) dialog.close();
+  setShowcaseOpenState(false);
+}
+
+/** Delegated handlers survive Swarm/swup DOM swaps on the home showcase. */
+function ensureShowcaseDelegation() {
+  if (showcaseDelegationBound) return;
+  showcaseDelegationBound = true;
+
+  document.addEventListener(
+    "click",
+    (event) => {
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+
+    if (target.closest("[data-showcase-open]")) {
+      event.preventDefault();
+      openShowcaseDialog();
+      return;
+    }
+
+    if (target.closest("[data-showcase-close]")) {
+      event.preventDefault();
+      closeShowcaseDialog();
+      return;
+    }
+
+    const dialog = document.querySelector("[data-showcase-dialog]");
+    if (dialog?.open && target === dialog) {
+      closeShowcaseDialog();
+    }
+  },
+    true,
   );
 
-  revealPanels.forEach((panel) => observer.observe(panel));
+  document.addEventListener(
+    "close",
+    (event) => {
+      const dialog = event.target;
+      if (!(dialog instanceof HTMLDialogElement)) return;
+      if (!dialog.matches("[data-showcase-dialog]")) return;
+      setShowcaseOpenState(false);
+      document.querySelector("[data-showcase-open]")?.focus();
+    },
+    true,
+  );
 }
 
-function setupInquiryTypeLinks() {
+/** Header auth controls — safe to call on every swup page. */
+export function mountSharedChrome() {
+  sharedAbort?.abort();
+  sharedAbort = new AbortController();
+  const { signal } = sharedAbort;
+
+  const button = authButton();
+  if (button) {
+    button.addEventListener(
+      "click",
+      async () => {
+        try {
+          if (button.dataset.mode === "out") {
+            await signOut(auth);
+          } else {
+            await signIn();
+          }
+        } catch (error) {
+          console.warn("Auth action failed:", error);
+        }
+      },
+      { signal },
+    );
+  }
+
+  ensureAuthListener();
+  ensureShowcaseDelegation();
+  updateAuthUi(auth.currentUser);
+  refreshDownloadState(auth.currentUser);
+  if (auth.currentUser) {
+    signedInUserIsAdmin(auth.currentUser)
+      .then((isAdmin) => {
+        if (auth.currentUser) setAdminLink(isAdmin);
+      })
+      .catch(() => {});
+  }
+
+  return () => {
+    sharedAbort?.abort();
+    sharedAbort = null;
+  };
+}
+
+/** Home-only widgets (download, contact, reveal, to-top, showcase). */
+export function mountHomePage() {
+  homeAbort?.abort();
+  homeAbort = new AbortController();
+  const { signal } = homeAbort;
+
+  const dl = downloadButton();
+  if (dl) {
+    dl.addEventListener("click", () => handleDownloadClick(), { signal });
+  }
+  refreshDownloadState(auth.currentUser);
+
+  const form = contactForm();
+  if (form) {
+    form.addEventListener(
+      "submit",
+      async (event) => {
+        event.preventDefault();
+
+        const formData = new FormData(form);
+        const type = String(formData.get("type") || "").trim();
+        const name = String(formData.get("name") || "").trim();
+        const email = String(formData.get("email") || "").trim();
+        const message = String(formData.get("message") || "").trim();
+        const honey = String(formData.get(HONEYPOT_FIELD) || "");
+
+        if (honey) {
+          finishContactForm();
+          return;
+        }
+
+        if (!INQUIRY_TYPES.has(type) || !name || !email || !message) {
+          setContactMessage("Please check your input.", "is-error");
+          return;
+        }
+
+        const submitButton = form.querySelector('button[type="submit"]');
+        if (submitButton) submitButton.disabled = true;
+        setContactMessage("Sending…");
+
+        try {
+          await addDoc(collection(db, "inquiries"), {
+            type,
+            name,
+            email,
+            message,
+            createdAt: serverTimestamp(),
+          });
+
+          const mailBody = new FormData();
+          mailBody.append("_subject", `[Santamonica Boy] ${type}`);
+          mailBody.append("_replyto", email);
+          mailBody.append("_template", "table");
+          mailBody.append("_captcha", "false");
+          mailBody.append("_honey", honey);
+          mailBody.append("_url", "https://santamonica-boy.web.app/");
+          mailBody.append("Type", type);
+          mailBody.append("Name", name);
+          mailBody.append("Email", email);
+          mailBody.append("Message", message);
+          mailBody.append(
+            "Summary",
+            [`[Type] ${type}`, `[Name] ${name}`, `[Email] ${email}`, "", message].join("\n"),
+          );
+
+          const mailResponse = await fetch(`https://formsubmit.co/ajax/${CONTACT_FORM_ID}`, {
+            method: "POST",
+            headers: {
+              Accept: "application/json",
+            },
+            body: mailBody,
+          });
+
+          const mailResult = await mailResponse.json().catch(() => ({}));
+          if (String(mailResult.success) !== "true") {
+            throw new Error(
+              String(mailResult.message || `Mail delivery failed (${mailResponse.status})`),
+            );
+          }
+
+          finishContactForm();
+        } catch (error) {
+          console.error("Failed to submit inquiry:", error);
+          setContactMessage("Something went wrong. Please try again.", "is-error");
+        } finally {
+          if (submitButton) submitButton.disabled = false;
+        }
+      },
+      { signal },
+    );
+  }
+
   document.querySelectorAll("[data-inquiry-type]").forEach((link) => {
-    link.addEventListener("click", () => {
-      const type = link.getAttribute("data-inquiry-type");
-      if (!type || !contactForm) return;
-      const input = contactForm.querySelector(`input[name="type"][value="${CSS.escape(type)}"]`);
-      if (input) input.checked = true;
-    });
-  });
-}
-
-function setupToTop() {
-  const button = document.querySelector("[data-to-top]");
-  if (!button) return;
-
-  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-  const showAfter = () => Math.max(240, Math.round(window.innerHeight * 0.45));
-
-  const syncVisibility = () => {
-    const visible = window.scrollY > showAfter();
-    button.classList.toggle("is-visible", visible);
-    button.hidden = !visible;
-  };
-
-  button.addEventListener("click", () => {
-    window.scrollTo({
-      top: 0,
-      behavior: reduceMotion.matches ? "auto" : "smooth",
-    });
+    link.addEventListener(
+      "click",
+      () => {
+        const type = link.getAttribute("data-inquiry-type");
+        const currentForm = contactForm();
+        if (!type || !currentForm) return;
+        const input = currentForm.querySelector(`input[name="type"][value="${CSS.escape(type)}"]`);
+        if (input) input.checked = true;
+      },
+      { signal },
+    );
   });
 
-  window.addEventListener("scroll", syncVisibility, { passive: true });
-  window.addEventListener("resize", syncVisibility, { passive: true });
-  syncVisibility();
-}
-
-function setupShowcaseDialog() {
-  const section = document.querySelector("#showcase");
-  const dialog = document.querySelector("[data-showcase-dialog]");
-  const openButton = document.querySelector("[data-showcase-open]");
-  if (!section || !dialog || !openButton || typeof dialog.showModal !== "function") return;
-
-  const closeButtons = dialog.querySelectorAll("[data-showcase-close]");
-
-  const setOpenState = (open) => {
-    section.classList.toggle("is-dialog-open", open);
-    document.documentElement.classList.toggle("is-scroll-locked", open);
-  };
-
-  openButton.addEventListener("click", () => {
-    dialog.showModal();
-    setOpenState(true);
-  });
-
-  closeButtons.forEach((button) => {
-    button.addEventListener("click", () => {
-      dialog.close();
-    });
-  });
-
-  dialog.addEventListener("click", (event) => {
-    if (event.target === dialog) dialog.close();
-  });
-
-  dialog.addEventListener("close", () => {
-    setOpenState(false);
-    openButton.focus();
-  });
-}
-
-if (authButton) {
-  authButton.addEventListener("click", async () => {
-    try {
-      if (authButton.dataset.mode === "out") {
-        await signOut(auth);
-      } else {
-        await signIn();
-      }
-    } catch (error) {
-      console.warn("Auth action failed:", error);
+  const revealPanels = document.querySelectorAll("[data-reveal]");
+  let revealObserver = null;
+  if (revealPanels.length) {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      revealPanels.forEach((panel) => panel.classList.add("is-in"));
+    } else {
+      revealObserver = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) entry.target.classList.add("is-in");
+          });
+        },
+        { threshold: 0.22 },
+      );
+      revealPanels.forEach((panel) => revealObserver.observe(panel));
     }
-  });
+  }
+
+  const toTop = document.querySelector("[data-to-top]");
+  if (toTop) {
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const showAfter = () => Math.max(240, Math.round(window.innerHeight * 0.45));
+    const syncVisibility = () => {
+      const visible = window.scrollY > showAfter();
+      toTop.classList.toggle("is-visible", visible);
+      toTop.hidden = !visible;
+    };
+    toTop.addEventListener(
+      "click",
+      () => {
+        window.scrollTo({
+          top: 0,
+          behavior: reduceMotion.matches ? "auto" : "smooth",
+        });
+      },
+      { signal },
+    );
+    window.addEventListener("scroll", syncVisibility, { passive: true, signal });
+    window.addEventListener("resize", syncVisibility, { passive: true, signal });
+    syncVisibility();
+  }
+
+  // Showcase open/close uses document-level delegation (ensureShowcaseDelegation)
+  // so it keeps working after Swarm rebuilds or swup replaces #swup.
+
+  return () => {
+    revealObserver?.disconnect();
+    homeAbort?.abort();
+    homeAbort = null;
+    document.documentElement.classList.remove("is-scroll-locked");
+  };
 }
-
-if (downloadButton && !clickBound) {
-  clickBound = true;
-  downloadButton.addEventListener("click", () => {
-    handleDownloadClick();
-  });
-}
-
-onAuthStateChanged(auth, (user) => {
-  updateAuthUi(user);
-  refreshDownloadState(user);
-  setAdminLink(false);
-  if (!user) return;
-  rememberFirstLogin(user)
-    .catch((error) => {
-      console.warn("Could not save the first login:", error);
-    })
-    .then(() => signedInUserIsAdmin(user))
-    .then((isAdmin) => {
-      if (auth.currentUser?.uid === user.uid) setAdminLink(isAdmin);
-    })
-    .catch((error) => {
-      console.warn("Could not check the admin role:", error);
-    });
-});
-
-setupContactForm();
-setupReveal();
-setupInquiryTypeLinks();
-setupToTop();
-setupShowcaseDialog();
