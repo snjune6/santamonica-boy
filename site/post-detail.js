@@ -1,4 +1,19 @@
 import { getPublishedPostBySlug, renderMarkdown } from "./posts.js?v=4";
+import { getApps } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+import {
+  getAnalytics,
+  isSupported,
+} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-analytics.js";
+
+// GA4 for /posts/{slug}. posts.js has already created the Firebase app.
+const analyticsApp = getApps()[0];
+if (analyticsApp) {
+  isSupported()
+    .then((supported) => {
+      if (supported) getAnalytics(analyticsApp);
+    })
+    .catch((error) => console.warn("Analytics unavailable:", error));
+}
 
 const status = document.querySelector("[data-status]");
 const article = document.querySelector("[data-article]");

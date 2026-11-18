@@ -1,5 +1,9 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
 import {
+  getAnalytics,
+  isSupported,
+} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-analytics.js";
+import {
   getAuth,
   onAuthStateChanged,
   GoogleAuthProvider,
@@ -45,6 +49,15 @@ const INQUIRY_TYPES = new Set([
 ]);
 
 const app = initializeApp(firebaseConfig);
+
+// GA4 (measurementId G-FCRLEMKTZK). Browsers with analytics storage blocked
+// report unsupported, so skip quietly instead of breaking the page.
+isSupported()
+  .then((supported) => {
+    if (supported) getAnalytics(app);
+  })
+  .catch((error) => console.warn("Analytics unavailable:", error));
+
 const auth = getAuth(app);
 const storage = getStorage(app);
 const db = getFirestore(app);
