@@ -31,7 +31,7 @@ async function mountPage() {
   if (path === "/") {
     cleanups.push(mountHomePage() || (() => {}));
   } else if (path === "/posts") {
-    const { mountConstellation } = await import("./posts-constellation.js?v=15");
+    const { mountConstellation } = await import("./posts-constellation.js?v=16");
     if (generation !== mountGeneration) return;
     cleanups.push((await mountConstellation()) || (() => {}));
   } else if (path.startsWith("/posts/")) {

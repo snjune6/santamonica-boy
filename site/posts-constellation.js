@@ -315,22 +315,16 @@ function openModal(post) {
   bindShareLinks(post);
 
   const modal = document.getElementById("node-modal");
-  const content = document.getElementById("modal-content");
-  modal.classList.remove("hidden");
-  requestAnimationFrame(() => {
-    modal.classList.remove("opacity-0", "pointer-events-none");
-    content.classList.remove("scale-95");
-    content.classList.add("scale-100");
-  });
+  if (!modal) return;
+  modal.setAttribute("aria-hidden", "false");
+  modal.classList.add("is-open");
 }
 
 function closeModal() {
   const modal = document.getElementById("node-modal");
-  const content = document.getElementById("modal-content");
-  modal.classList.add("opacity-0", "pointer-events-none");
-  content.classList.remove("scale-100");
-  content.classList.add("scale-95");
-  setTimeout(() => modal.classList.add("hidden"), 300);
+  if (!modal) return;
+  modal.classList.remove("is-open");
+  modal.setAttribute("aria-hidden", "true");
 }
 
 function absolutePostUrl(slug) {

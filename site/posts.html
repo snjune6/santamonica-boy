@@ -324,6 +324,37 @@
         padding-top: 4px;
       }
 
+      /* Don't rely on Tailwind utilities — swup may land without CDN styles applied. */
+      #node-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 40;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        background: rgba(15, 23, 42, 0.25);
+        backdrop-filter: blur(6px);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 280ms ease;
+      }
+
+      #node-modal.is-open {
+        display: flex;
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      #node-modal #modal-content {
+        transform: scale(0.96);
+        transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
+      }
+
+      #node-modal.is-open #modal-content {
+        transform: scale(1);
+      }
+
       .detail-panel-hero {
         display: block;
         width: 100%;
@@ -588,7 +619,7 @@
           display: none;
         }
 
-        #node-modal {
+        #node-modal.is-open {
           padding: 12px;
           align-items: flex-end;
         }
@@ -782,12 +813,9 @@
       </p>
     </footer>
 
-    <div
-      id="node-modal"
-      class="fixed inset-0 z-30 flex items-center justify-center p-4 bg-slate-900/25 backdrop-blur-sm hidden opacity-0 transition-all duration-300 pointer-events-none"
-    >
+    <div id="node-modal" aria-hidden="true">
       <div
-        class="node-modal-card w-full max-w-xl max-h-[85vh] flex flex-col overflow-hidden transform scale-95 transition-transform duration-300 pointer-events-auto"
+        class="node-modal-card w-full max-w-xl max-h-[85vh] flex flex-col overflow-hidden pointer-events-auto"
         id="modal-content"
       >
         <div class="node-modal-media" data-modal-media hidden>
